@@ -17,6 +17,41 @@
     const { useState, useEffect } = React;
     const { X, Plus, Trash2, Instagram, Upload } = lucide;
 
+    // Mock storage for GitHub Pages deployment
+    const storage = {
+      data: {},
+      async get(key, shared = false) {
+        const storageKey = shared ? `shared_${key}` : key;
+        const item = localStorage.getItem(storageKey);
+        return item ? { value: item, key: storageKey, shared } : null;
+      },
+      async set(key, value, shared = false) {
+        const storageKey = shared ? `shared_${key}` : key;
+        localStorage.setItem(storageKey, value);
+        return { value, key: storageKey, shared };
+      },
+      async delete(key, shared = false) {
+        const storageKey = shared ? `shared_${key}` : key;
+        localStorage.removeItem(storageKey);
+        return { key: storageKey, deleted: true, shared };
+      },
+      async list(prefix = '', shared = false) {
+        const keys = [];
+        const prefixKey = shared ? `shared_${prefix}` : prefix;
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key.startsWith(prefixKey)) {
+            keys.push(key);
+          }
+        }
+        return { keys, prefix, shared };
+      }
+    };
+
+    if (!window.storage) {
+      window.storage = storage;
+    }
+
     function CeramicsInventory() {
       const [pieces, setPieces] = useState([]);
       const [activeTab, setActiveTab] = useState('All');
@@ -291,7 +326,7 @@
 
           <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-4">
             <div className="w-[100px] h-[78px] bg-gray-200 rounded"></div>
-            <a
+            
               href="https://instagram.com/jshi.ceramics"
               target="_blank"
               rel="noopener noreferrer"
