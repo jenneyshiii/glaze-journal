@@ -17,7 +17,7 @@
     .container { max-width: 1200px; margin: 0 auto; padding: 0 40px; }
     .header { padding-top: 40px; display: flex; justify-content: space-between; align-items: flex-start; }
     .title { font-size: 40px; line-height: 55px; color: #1E654B; }
-    .tagline { font-size: 16px; color: #1E1E1E; margin-top: 4px; }
+    .tagline { font-size: 16px; font-weight: 300; color: #1E1E1E; margin-top: 4px; }
     .btn { 
       background: #1E654B; 
       color: #FFFFFF; 
@@ -25,7 +25,7 @@
       border-radius: 100px; 
       padding: 12px 24px;
       font-size: 16px;
-      font-weight: 500;
+      font-weight: 300;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
@@ -33,7 +33,6 @@
     }
     .btn:hover { opacity: 0.9; }
     .tabs { 
-      margin-top: 146px; 
       padding-top: 24px; 
       border-bottom: 1px solid #D9D9D9;
       display: flex;
@@ -90,8 +89,8 @@
       align-items: center;
       justify-content: center;
     }
-    .badge.good { background: #14AE5C; }
-    .badge.bad { background: #EC221F; }
+    .badge.good { background: #14AE5C; color:#FFFFFF;}
+    .badge.bad { background: #EC221F; color:#FFFFFF;}
     .card-clay { font-size: 16px; color: #1E1E1E; }
     .card-glaze { font-size: 13px; color: #757575; margin-top: 4px; cursor: help; position: relative; }
     .card-glaze:hover::after {
@@ -131,25 +130,24 @@
     .sidebar.show { right: 0; }
     .sidebar-content { padding: 32px; }
     .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-    .sidebar-title { font-size: 20px; color: #0D382C; }
+    .sidebar-title { font-size: 20px; color: #0D382C; font-weight: 300; }
     .close-btn { background: none; border: none; cursor: pointer; font-size: 24px; }
     .form-row { display: flex; gap: 24px; margin-bottom: 24px; }
-    .form-group { flex: 1; }
-    .form-group.fixed { width: 256px; flex-shrink: 0; }
-    label { display: block; font-size: 16px; color: #1E1E1E; margin-bottom: 8px; }
+    .form-group { flex: 1; margin-top: 16px;}
+    .form-group.fixed { width: 2px; flex-shrink: 0; }
+    label { display: block; font-size: 16px; color: #1E1E1E; font-weight: 300; margin-bottom: 8px; }
     input, textarea, select {
-      width: 100%;
       padding: 12px 16px;
       border: 1px solid #D9D9D9;
       border-radius: 8px;
       font-size: 16px;
       font-family: inherit;
     }
-    textarea { resize: none; height: 96px; }
+    textarea { resize: none; height: 96px; width:100%; }
     .image-upload {
-      width: 256px;
+      width: auto;
       height: 256px;
-      border: 2px dashed #757575;
+      border: 2px dashed #D9D9D9;
       border-radius: 8px;
       display: flex;
       flex-direction: column;
@@ -196,16 +194,17 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
-    .radio-group { display: flex; gap: 16px; margin-top: 16px; }
-    .radio-label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .radio-group { display: flex; gap: 8px; margin-top: 16px; }
+    .radio-label { display: flex; align-items: center; gap: 8px; cursor: pointer;}
     .footer-actions {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding-top: 24px;
       border-top: 1px solid #D9D9D9;
+      margin-top:24px;
     }
     .btn-group { display: flex; gap: 8px; }
     .btn-secondary {
@@ -215,6 +214,7 @@
       border-radius: 100px;
       padding: 8px 24px;
       cursor: pointer;
+      font-size: 16px;
     }
     .btn-delete {
       background: none;
@@ -225,7 +225,7 @@
       font-size: 14px;
     }
     .hidden { display: none; }
-    .divider { border-bottom: 1px solid #D9D9D9; margin: 24px 0; }
+    .divider { border-bottom: 1px solid #D9D9D9; margin: 0; }
     .inline-fields { display: flex; gap: 16px; align-items: center; }
     .coats-input { width: 80px; }
     .footer-link {
@@ -254,7 +254,12 @@
         <p class="tagline font-mono">Documenting glaze combo and tests</p>
       </div>
       <button class="btn font-mono" onclick="openSidebar()">
-        <span>➕</span> New entry
+        <span>            
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus inline mr-2">
+                <path d="M5 15h14"></path>
+                <path d="M12 8v14"></path>
+            </svg>
+</span> New entry
       </button>
     </div>
 
@@ -268,7 +273,6 @@
   </div>
 
   <div class="footer-link">
-    <div style="width:100px;height:78px;background:#ddd;border-radius:4px;"></div>
     <a href="https://instagram.com/jshi.ceramics" target="_blank" class="font-mono">
       instagram.com/jshi.ceramics
     </a>
@@ -279,7 +283,12 @@
     <div class="sidebar-content">
       <div class="sidebar-header">
         <h2 class="sidebar-title font-mono" id="sidebar-title">New entry</h2>
-        <button class="close-btn" onclick="closeSidebar()">✕</button>
+        <button class="close-btn" onclick="closeSidebar()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x text-[#1D1B20]">
+                <path d="M18 6 6 18"></path>
+                <path d="m6 6 12 12"></path>
+            </svg>
+        </button>
       </div>
       <div class="divider"></div>
 
@@ -289,12 +298,22 @@
             <label>Image</label>
             <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
             <div id="uploadArea" class="image-upload" onclick="document.getElementById('imageInput').click()">
-              <span style="font-size:20px">📤</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-upload text-[#1E1E1E] mb-2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4">
+                </path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" x2="12" y1="3" y2="15"></line>
+            </svg>
               <span style="font-size:14px;color:#757575;margin-top:8px;">Click to upload</span>
             </div>
             <div id="previewArea" class="image-preview hidden" onclick="viewFullImage()">
               <img id="preview" src="" alt="">
-              <button type="button" class="remove-image" onclick="removeImage(event)">✕</button>
+              <button type="button" class="remove-image" onclick="removeImage(event)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x" style="position: relative; top: 1px;">
+                    <path d="M18 6 6 18"></path>
+                    <path d="m6 6 12 12"></path>
+                </svg>
+            </button>
             </div>
           </div>
 
@@ -324,10 +343,12 @@
         </div>
 
         <div class="glaze-card">
-          <h3 class="font-mono" style="margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid #D9D9D9;">Glaze details</h3>
+          <h3 class="font-mono" style="margin-bottom:16px; padding-bottom:8px; border-bottom:1px solid #D9D9D9; font-weight:300;">Glaze details</h3>
           <div id="layers"></div>
-          <button type="button" onclick="addLayer()" style="background:none;border:none;color:#757575;text-decoration:underline;cursor:pointer;font-size:14px;">
-            ➕ Add new layer
+          <button type="button" onclick="addLayer()" style="background:none;border:none;color:#121212;text-decoration:underline;cursor:pointer;font-size:14px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus">
+                <path d="M5 15h14"></path>
+                <path d="M12 8v14"></path></svg> Add new layer
           </button>
         </div>
 
@@ -349,8 +370,14 @@
         </div>
 
         <div class="footer-actions">
-          <button type="button" id="deleteBtn" class="btn-delete hidden" onclick="deletePiece()">
-            🗑️ Delete
+          <button type="button" id="deleteBtn" class="btn-delete hidden" onclick="deletePiece()" >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2" style="transform: translateY(4px);">
+                <path d="M3 6h18"></path>
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                <line x1="10" x2="10" y1="11" y2="17"></line>
+                <line x1="14" x2="14" y1="11" y2="17"></line>
+            </svg> Delete
           </button>
           <div class="btn-group">
             <button type="button" class="btn-secondary font-mono" onclick="closeSidebar()">Cancel</button>
@@ -490,8 +517,8 @@
       container.innerHTML = layers.map((layer, i) => `
         <div class="layer-card">
           <div class="layer-header">
-            <span style="font-weight:500;font-size:14px;">${i === 0 ? 'Base layer' : `Layer ${i + 1}`}</span>
-            ${i > 0 ? `<button type="button" onclick="removeLayer(${i})" style="color:#C00F0C;background:none;border:none;cursor:pointer;text-decoration:underline;font-size:14px;">Remove</button>` : ''}
+            <span style="font-weight:400; font-size:14px;">${i === 0 ? 'Base layer' : `Layer ${i + 1}`}</span>
+            ${i > 0 ? `<button type="button" onclick="removeLayer(${i})" style="color:#C00F0C; background:none; border:none; cursor:pointer; text-decoration:underline; font-size:14px;">Remove</button>` : ''}
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
             <div>
@@ -510,7 +537,7 @@
               <label>Coats:</label>
               <input type="number" class="layer-coats coats-input" value="${layer.coats || ''}" min="0">
             </div>
-            <div class="radio-group" style="margin-top:0;">
+            <div class="radio-group" style="padding-top:16px;">
               <label class="radio-label">
                 <input type="radio" name="app${i}" value="Dipped" ${layer.application === 'Dipped' ? 'checked' : ''}> Dipped
               </label>
