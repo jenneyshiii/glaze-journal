@@ -252,14 +252,32 @@
         <h1 class="title font-serif">Glaze journal</h1>
         <p class="tagline font-mono">Documenting glaze combo and tests</p>
       </div>
-      <button class="btn font-mono" onclick="openSidebar()">
-        <span>            
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn-secondary font-mono" onclick="importFromFolder()" title="Import from folder">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:translateY(2px);">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" x2="12" y1="15" y2="3"></line>
+          </svg>
+          Import
+        </button>
+        <button class="btn-secondary font-mono" onclick="exportToFolder()" title="Export to folder">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:translateY(2px);">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" x2="12" y1="3" y2="15"></line>
+          </svg>
+          Export
+        </button>
+        <button class="btn font-mono" onclick="openSidebar()">
+          <span>
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus inline mr-2">
-                <path d="M5 15h14"></path>
-                <path d="M12 8v14"></path>
+              <path d="M5 15h14"></path>
+              <path d="M12 8v14"></path>
             </svg>
-</span> New entry
-      </button>
+          </span> New entry
+        </button>
+      </div>
     </div>
 
     <div class="tabs font-mono">
@@ -392,81 +410,307 @@
     let currentTab = 'All';
     let editingId = null;
     let currentImage = null;
+    let currentImageBlob = null;
     let clayOptions = ['Porcelain', 'Stoneware', 'Earthenware'];
     let brandOptions = ['Amaco', 'Mayco', 'Botz'];
     let glazeOptions = ['Celadon', 'Tenmoku', 'Shino'];
 
-    function loadData() {
-      const data = localStorage.getItem('ceramics-pieces');
-      if (data) pieces = JSON.parse(data);
-      
-      const clay = localStorage.getItem('clay-options');
-      if (clay) clayOptions = JSON.parse(clay);
-      
-      const brand = localStorage.getItem('brand-options');
-      if (brand) brandOptions = JSON.parse(brand);
-      
-      const glaze = localStorage.getItem('glaze-options');
-      if (glaze) glazeOptions = JSON.parse(glaze);
-      
+    // IndexedDB setup
+    let db = null;
+    const DB_NAME = 'glaze-journal';
+    const DB_VERSION = 1;
+
+    function openDatabase() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          db = request.result;
+          resolve(db);
+        };
+
+        request.onupgradeneeded = (e) => {
+          const database = e.target.result;
+          if (!database.objectStoreNames.contains('pieces')) {
+            database.createObjectStore('pieces', { keyPath: 'id' });
+          }
+          if (!database.objectStoreNames.contains('images')) {
+            database.createObjectStore('images', { keyPath: 'id' });
+          }
+          if (!database.objectStoreNames.contains('options')) {
+            database.createObjectStore('options', { keyPath: 'key' });
+          }
+        };
+      });
+    }
+
+    async function loadData() {
+      await openDatabase();
+
+      // Load pieces from IndexedDB
+      const piecesData = await getAllFromStore('pieces');
+      pieces = piecesData;
+
+      // Load options
+      const clayData = await getFromStore('options', 'clay');
+      if (clayData) clayOptions = clayData.values;
+
+      const brandData = await getFromStore('options', 'brand');
+      if (brandData) brandOptions = brandData.values;
+
+      const glazeData = await getFromStore('options', 'glaze');
+      if (glazeData) glazeOptions = glazeData.values;
+
       updateDataLists();
       renderGrid();
     }
 
-    function saveData() {
-      localStorage.setItem('ceramics-pieces', JSON.stringify(pieces));
-      localStorage.setItem('clay-options', JSON.stringify(clayOptions));
-      localStorage.setItem('brand-options', JSON.stringify(brandOptions));
-      localStorage.setItem('glaze-options', JSON.stringify(glazeOptions));
+    function getAllFromStore(storeName) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readonly');
+        const store = tx.objectStore(storeName);
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function getFromStore(storeName, key) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readonly');
+        const store = tx.objectStore(storeName);
+        const request = store.get(key);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function putInStore(storeName, data) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readwrite');
+        const store = tx.objectStore(storeName);
+        const request = store.put(data);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function deleteFromStore(storeName, key) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readwrite');
+        const store = tx.objectStore(storeName);
+        const request = store.delete(key);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function saveImage(id, blob) {
+      await putInStore('images', { id, blob });
+    }
+
+    async function getImage(id) {
+      const data = await getFromStore('images', id);
+      return data ? data.blob : null;
+    }
+
+    async function deleteImage(id) {
+      await deleteFromStore('images', id);
+    }
+
+    async function saveData() {
+      // Save options
+      await putInStore('options', { key: 'clay', values: clayOptions });
+      await putInStore('options', { key: 'brand', values: brandOptions });
+      await putInStore('options', { key: 'glaze', values: glazeOptions });
+    }
+
+    async function savePiece(piece) {
+      await putInStore('pieces', piece);
+      await saveData();
+    }
+
+    async function deletePieceFromDB(id) {
+      await deleteFromStore('pieces', id);
+      await deleteImage(id);
+    }
+
+    // File System Access API - Export/Import
+    async function exportToFolder() {
+      try {
+        const dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+
+        // Create images subfolder
+        const imagesDir = await dirHandle.getDirectoryHandle('images', { create: true });
+
+        // Export each image
+        const piecesForExport = [];
+        for (const piece of pieces) {
+          const pieceData = { ...piece };
+
+          if (piece.imageId) {
+            const blob = await getImage(piece.imageId);
+            if (blob) {
+              const ext = blob.type.split('/')[1] || 'jpg';
+              const filename = `${piece.imageId}.${ext}`;
+              const fileHandle = await imagesDir.getFileHandle(filename, { create: true });
+              const writable = await fileHandle.createWritable();
+              await writable.write(blob);
+              await writable.close();
+              pieceData.imageFile = `images/${filename}`;
+            }
+          }
+          delete pieceData.imageId;
+          piecesForExport.push(pieceData);
+        }
+
+        // Export data.json
+        const data = {
+          pieces: piecesForExport,
+          options: { clay: clayOptions, brand: brandOptions, glaze: glazeOptions },
+          exportedAt: new Date().toISOString()
+        };
+
+        const dataFile = await dirHandle.getFileHandle('data.json', { create: true });
+        const writable = await dataFile.createWritable();
+        await writable.write(JSON.stringify(data, null, 2));
+        await writable.close();
+
+        alert('Export complete!');
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error('Export failed:', err);
+          alert('Export failed: ' + err.message);
+        }
+      }
+    }
+
+    async function importFromFolder() {
+      try {
+        const dirHandle = await window.showDirectoryPicker({ mode: 'read' });
+
+        // Read data.json
+        const dataFile = await dirHandle.getFileHandle('data.json');
+        const file = await dataFile.getFile();
+        const data = JSON.parse(await file.text());
+
+        // Import options
+        if (data.options) {
+          clayOptions = data.options.clay || clayOptions;
+          brandOptions = data.options.brand || brandOptions;
+          glazeOptions = data.options.glaze || glazeOptions;
+        }
+
+        // Try to get images folder
+        let imagesDir = null;
+        try {
+          imagesDir = await dirHandle.getDirectoryHandle('images');
+        } catch (e) {}
+
+        // Import pieces and images
+        for (const piece of data.pieces) {
+          const newPiece = { ...piece, id: piece.id || Date.now() + Math.random() };
+
+          if (piece.imageFile && imagesDir) {
+            try {
+              const filename = piece.imageFile.replace('images/', '');
+              const imageFileHandle = await imagesDir.getFileHandle(filename);
+              const imageFile = await imageFileHandle.getFile();
+              const blob = await imageFile.slice();
+
+              newPiece.imageId = newPiece.id;
+              await saveImage(newPiece.id, blob);
+            } catch (e) {
+              console.warn('Could not load image:', piece.imageFile);
+            }
+          }
+          delete newPiece.imageFile;
+
+          pieces.push(newPiece);
+          await putInStore('pieces', newPiece);
+        }
+
+        await saveData();
+        updateDataLists();
+        renderGrid();
+
+        alert('Import complete! ' + data.pieces.length + ' entries imported.');
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error('Import failed:', err);
+          alert('Import failed: ' + err.message);
+        }
+      }
     }
 
     function updateDataLists() {
-      document.getElementById('clay-list').innerHTML = clayOptions.map(o => `<option value="${o}">`).join('');
+      document.getElementById('clay-list').innerHTML = clayOptions.map(o => `<option value="${escapeHtml(o)}">`).join('');
     }
 
     function addToOptions(value, array) {
       if (value && !array.includes(value)) array.push(value);
     }
 
-    function renderGrid() {
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    async function renderGrid() {
       const filtered = pieces.filter(p => {
         if (currentTab === 'All') return true;
         return p.result === currentTab;
       });
 
-const grid = document.getElementById('grid');
-grid.innerHTML = filtered.map(p => {
-  const layers = p.layers || [];
-  const count = layers.length;
-  
-  // 1. Logic for the displayed text (Show up to 2 names)
-  let glazeText = layers[0]?.glaze || 'Untitled';
-  
-  if (count === 2) {
-    glazeText += `, ${layers[1]?.glaze || 'Untitled'}`;
-  } else if (count > 2) {
-    glazeText += `, ${layers[1]?.glaze || 'Untitled'} +${count - 2}`;
-  }
-  
-  // 2. Tooltip logic (Only show if there are more than 2 layers)
-  const tooltipText = count > 2 
-    ? layers.map(l => l.glaze).filter(Boolean).join(', ')
-    : '';
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
 
-  const tooltipAttr = tooltipText ? `data-tooltip="${tooltipText}"` : '';
+      for (const p of filtered) {
+        const layers = p.layers || [];
+        const count = layers.length;
 
-  return `
-    <div class="card font-mono" onclick="editPiece(${p.id})">
-      <div class="card-image">
-        ${p.image ? `<img src="${p.image}" alt="">` : ''}
-      </div>
-      <div class="badge ${p.result === 'Good' ? 'good' : 'bad'}">
-        ${p.result === 'Good' ? '✓' : '✕'}
-      </div>
-      <div class="card-glaze" ${tooltipAttr}>${glazeText}</div>
-    </div>
-  `;
-}).join('');
+        // Show up to 2 glaze names, then +N for remaining
+        let glazeText = layers[0]?.glaze || 'Untitled';
+        if (count === 2) {
+          glazeText += `, ${layers[1]?.glaze || 'Untitled'}`;
+        } else if (count > 2) {
+          glazeText += `, ${layers[1]?.glaze || 'Untitled'} +${count - 2}`;
+        }
+
+        // Tooltip only if more than 2 layers
+        const tooltip = count > 2
+          ? layers.map(l => l.glaze).filter(Boolean).join(', ')
+          : '';
+
+        const card = document.createElement('div');
+        card.className = 'card font-mono';
+        card.onclick = () => editPiece(p.id);
+
+        let imageHtml = '';
+        if (p.imageId) {
+          const blob = await getImage(p.imageId);
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            imageHtml = `<img src="${url}" alt="">`;
+          }
+        }
+
+        card.innerHTML = `
+          <div class="card-image">${imageHtml}</div>
+          <div class="badge ${p.result === 'Good' ? 'good' : 'bad'}">
+            ${p.result === 'Good' ? '✓' : '✕'}
+          </div>
+          <div class="card-glaze" ${tooltip ? `data-tooltip="${escapeHtml(tooltip)}"` : ''}>${escapeHtml(glazeText)}</div>
+        `;
+
+        grid.appendChild(card);
+      }
     }
 
     function filterTab(tab) {
@@ -479,6 +723,7 @@ grid.innerHTML = filtered.map(p => {
     function openSidebar() {
       editingId = null;
       currentImage = null;
+      currentImageBlob = null;
       document.getElementById('sidebar-title').textContent = 'New entry';
       document.getElementById('deleteBtn').classList.add('hidden');
       document.querySelector('form').reset();
@@ -489,29 +734,38 @@ grid.innerHTML = filtered.map(p => {
       document.getElementById('sidebar').classList.add('show');
     }
 
-    function editPiece(id) {
+    async function editPiece(id) {
       const piece = pieces.find(p => p.id === id);
       if (!piece) return;
-      
+
       editingId = id;
-      currentImage = piece.image;
+      currentImage = null;
+      currentImageBlob = null;
       document.getElementById('sidebar-title').textContent = 'Edit entry';
       document.getElementById('deleteBtn').classList.remove('hidden');
-      
-      document.getElementById('clay').value = piece.clay;
-      document.getElementById('temperature').value = piece.temperature;
-      document.getElementById('cone').value = piece.cone;
+
+      document.getElementById('clay').value = piece.clay || '';
+      document.getElementById('temperature').value = piece.temperature || '';
+      document.getElementById('cone').value = piece.cone || '';
       document.getElementById('notes').value = piece.notes || '';
-      document.querySelector(`input[name="atmosphere"][value="${piece.atmosphere}"]`).checked = true;
-      document.querySelector(`input[name="result"][value="${piece.result}"]`).checked = true;
-      
-      if (piece.image) {
-        document.getElementById('preview').src = piece.image;
-        document.getElementById('uploadArea').classList.add('hidden');
-        document.getElementById('previewArea').classList.remove('hidden');
+      document.querySelector(`input[name="atmosphere"][value="${piece.atmosphere || 'Oxidation'}"]`).checked = true;
+      document.querySelector(`input[name="result"][value="${piece.result || 'Good'}"]`).checked = true;
+
+      if (piece.imageId) {
+        const blob = await getImage(piece.imageId);
+        if (blob) {
+          currentImageBlob = blob;
+          currentImage = URL.createObjectURL(blob);
+          document.getElementById('preview').src = currentImage;
+          document.getElementById('uploadArea').classList.add('hidden');
+          document.getElementById('previewArea').classList.remove('hidden');
+        }
+      } else {
+        document.getElementById('uploadArea').classList.remove('hidden');
+        document.getElementById('previewArea').classList.add('hidden');
       }
-      
-      renderLayers(piece.layers);
+
+      renderLayers(piece.layers || [{ brand: '', glaze: '', application: 'Dipped', coats: '' }]);
       document.getElementById('modal').classList.add('show');
       document.getElementById('sidebar').classList.add('show');
     }
@@ -532,19 +786,19 @@ grid.innerHTML = filtered.map(p => {
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
             <div>
               <label>Brand</label>
-              <input type="text" class="layer-brand" value="${layer.brand}" list="brand-list-${i}">
-              <datalist id="brand-list-${i}">${brandOptions.map(o => `<option value="${o}">`).join('')}</datalist>
+              <input type="text" class="layer-brand" value="${escapeHtml(layer.brand)}" list="brand-list-${i}">
+              <datalist id="brand-list-${i}">${brandOptions.map(o => `<option value="${escapeHtml(o)}">`).join('')}</datalist>
             </div>
             <div>
               <label>Glaze name</label>
-              <input type="text" class="layer-glaze" value="${layer.glaze}" list="glaze-list-${i}">
-              <datalist id="glaze-list-${i}">${glazeOptions.map(o => `<option value="${o}">`).join('')}</datalist>
+              <input type="text" class="layer-glaze" value="${escapeHtml(layer.glaze)}" list="glaze-list-${i}">
+              <datalist id="glaze-list-${i}">${glazeOptions.map(o => `<option value="${escapeHtml(o)}">`).join('')}</datalist>
             </div>
           </div>
           <div class="inline-fields">
             <div>
               <label>Coats:</label>
-              <input type="number" class="layer-coats coats-input" value="${layer.coats || ''}" min="0">
+              <input type="number" class="layer-coats coats-input" value="${escapeHtml(layer.coats) || ''}" min="0">
             </div>
             <div class="radio-group" style="padding-top:16px;">
               <label class="radio-label">
@@ -595,20 +849,18 @@ grid.innerHTML = filtered.map(p => {
     function handleImageUpload(e) {
       const file = e.target.files[0];
       if (!file) return;
-      
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        currentImage = e.target.result;
-        document.getElementById('preview').src = currentImage;
-        document.getElementById('uploadArea').classList.add('hidden');
-        document.getElementById('previewArea').classList.remove('hidden');
-      };
-      reader.readAsDataURL(file);
+
+      currentImageBlob = file;
+      currentImage = URL.createObjectURL(file);
+      document.getElementById('preview').src = currentImage;
+      document.getElementById('uploadArea').classList.add('hidden');
+      document.getElementById('previewArea').classList.remove('hidden');
     }
 
     function removeImage(e) {
       e.stopPropagation();
       currentImage = null;
+      currentImageBlob = null;
       document.getElementById('imageInput').value = '';
       document.getElementById('uploadArea').classList.remove('hidden');
       document.getElementById('previewArea').classList.add('hidden');
@@ -620,14 +872,14 @@ grid.innerHTML = filtered.map(p => {
       win.document.write(`<img src="${currentImage}" style="max-width:100%;max-height:100vh;">`);
     }
 
-    function handleSave(e) {
+    async function handleSave(e) {
       e.preventDefault();
-      
+
       const brands = Array.from(document.querySelectorAll('.layer-brand')).map(i => i.value);
       const glazes = Array.from(document.querySelectorAll('.layer-glaze')).map(i => i.value);
       const coats = Array.from(document.querySelectorAll('.layer-coats')).map(i => i.value);
       const apps = Array.from(document.querySelectorAll('[name^="app"]')).filter(i => i.checked).map(i => i.value);
-      
+
       const layers = brands.map((b, i) => ({
         brand: b,
         glaze: glazes[i],
@@ -635,9 +887,11 @@ grid.innerHTML = filtered.map(p => {
         coats: coats[i]
       }));
 
+      const pieceId = editingId || Date.now();
+
       const piece = {
-        id: editingId || Date.now(),
-        image: currentImage,
+        id: pieceId,
+        imageId: currentImageBlob ? pieceId : (editingId ? pieces.find(p => p.id === editingId)?.imageId : null),
         clay: document.getElementById('clay').value,
         temperature: document.getElementById('temperature').value,
         cone: document.getElementById('cone').value,
@@ -646,6 +900,19 @@ grid.innerHTML = filtered.map(p => {
         result: document.querySelector('input[name="result"]:checked').value,
         notes: document.getElementById('notes').value
       };
+
+      // Save image if new
+      if (currentImageBlob) {
+        await saveImage(pieceId, currentImageBlob);
+        piece.imageId = pieceId;
+      } else if (!currentImage && editingId) {
+        // Image was removed
+        const oldPiece = pieces.find(p => p.id === editingId);
+        if (oldPiece?.imageId) {
+          await deleteImage(oldPiece.imageId);
+        }
+        piece.imageId = null;
+      }
 
       // Add to options
       addToOptions(piece.clay, clayOptions);
@@ -661,17 +928,17 @@ grid.innerHTML = filtered.map(p => {
         pieces.push(piece);
       }
 
-      saveData();
+      await savePiece(piece);
       updateDataLists();
-      renderGrid();
+      await renderGrid();
       closeSidebar();
     }
 
-    function deletePiece() {
+    async function deletePiece() {
       if (!confirm('Are you sure you want to delete this piece?')) return;
+      await deletePieceFromDB(editingId);
       pieces = pieces.filter(p => p.id !== editingId);
-      saveData();
-      renderGrid();
+      await renderGrid();
       closeSidebar();
     }
 
