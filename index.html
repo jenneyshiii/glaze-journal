@@ -538,6 +538,10 @@
 
     // File System Access API - Export/Import
     async function exportToFolder() {
+      if (!window.showDirectoryPicker) {
+        alert('Export requires Chrome or Edge browser.\n\nSafari and Firefox do not support this feature.');
+        return;
+      }
       try {
         const dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
 
@@ -587,6 +591,10 @@
     }
 
     async function importFromFolder() {
+      if (!window.showDirectoryPicker) {
+        alert('Import requires Chrome or Edge browser.\n\nSafari and Firefox do not support this feature.');
+        return;
+      }
       try {
         const dirHandle = await window.showDirectoryPicker({ mode: 'read' });
 
