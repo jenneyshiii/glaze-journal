@@ -91,9 +91,8 @@
     }
     .badge.good { background: #14AE5C; color:#FFFFFF;}
     .badge.bad { background: #EC221F; color:#FFFFFF;}
-    .card-clay { font-size: 16px; color: #1E1E1E; }
-    .card-glaze { font-size: 13px; color: #757575; margin-top: 4px; cursor: help; position: relative; }
-    .card-glaze:hover::after {
+    .card-glaze { font-size: 14px; color: #1e1e1e; margin-bottom: 4px; position: relative; }
+    .card-glaze[data-tooltip]:not([data-tooltip=""]):hover::after {
       content: attr(data-tooltip);
       position: absolute;
       bottom: 100%;
@@ -394,7 +393,7 @@
     let editingId = null;
     let currentImage = null;
     let clayOptions = ['Porcelain', 'Stoneware', 'Earthenware'];
-    let brandOptions = ['Amaco', 'Mayco', 'Spectrum'];
+    let brandOptions = ['Amaco', 'Mayco', 'Botz'];
     let glazeOptions = ['Celadon', 'Tenmoku', 'Shino'];
 
     function loadData() {
@@ -435,29 +434,39 @@
         return p.result === currentTab;
       });
 
-      const grid = document.getElementById('grid');
-      grid.innerHTML = filtered.map(p => {
-        const glazeText = p.layers.length > 1 
-          ? (p.layers[0].glaze || 'Untitled') + ` +${p.layers.length - 1}`
-          : (p.layers[0]?.glaze || 'Untitled');
-        
-        const tooltip = p.layers.length > 1 
-          ? p.layers.map(l => l.glaze).filter(Boolean).join(', ')
-          : '';
+const grid = document.getElementById('grid');
+grid.innerHTML = filtered.map(p => {
+  const layers = p.layers || [];
+  const count = layers.length;
+  
+  // 1. Logic for the displayed text (Show up to 2 names)
+  let glazeText = layers[0]?.glaze || 'Untitled';
+  
+  if (count === 2) {
+    glazeText += `, ${layers[1]?.glaze || 'Untitled'}`;
+  } else if (count > 2) {
+    glazeText += `, ${layers[1]?.glaze || 'Untitled'} +${count - 2}`;
+  }
+  
+  // 2. Tooltip logic (Only show if there are more than 2 layers)
+  const tooltipText = count > 2 
+    ? layers.map(l => l.glaze).filter(Boolean).join(', ')
+    : '';
 
-        return `
-          <div class="card font-mono" onclick="editPiece(${p.id})">
-            <div class="card-image">
-              ${p.image ? `<img src="${p.image}" alt="">` : ''}
-            </div>
-            <div class="badge ${p.result === 'Good' ? 'good' : 'bad'}">
-              ${p.result === 'Good' ? '✓' : '✕'}
-            </div>
-            <div class="card-clay">${p.clay || 'No clay specified'}</div>
-            <div class="card-glaze" ${tooltip ? `data-tooltip="${tooltip}"` : ''}>${glazeText}</div>
-          </div>
-        `;
-      }).join('');
+  const tooltipAttr = tooltipText ? `data-tooltip="${tooltipText}"` : '';
+
+  return `
+    <div class="card font-mono" onclick="editPiece(${p.id})">
+      <div class="card-image">
+        ${p.image ? `<img src="${p.image}" alt="">` : ''}
+      </div>
+      <div class="badge ${p.result === 'Good' ? 'good' : 'bad'}">
+        ${p.result === 'Good' ? '✓' : '✕'}
+      </div>
+      <div class="card-glaze" ${tooltipAttr}>${glazeText}</div>
+    </div>
+  `;
+}).join('');
     }
 
     function filterTab(tab) {
