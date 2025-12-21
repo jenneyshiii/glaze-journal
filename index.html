@@ -261,17 +261,7 @@
         <h1 class="title font-serif">Glaze journal</h1>
         <p class="tagline font-mono">Documenting glaze combo and tests</p>
       </div>
-      <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 12px;">
-          <button class="btn font-mono" onclick="openSidebar()">
-            <span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus inline mr-2">
-                <path d="M5 15h14"></path>
-               <path d="M12 8v14"></path>
-              </svg>
-            </span> New entry
-          </button>
-      
-      <div style="display: flex; gap: 8px; align-items: center;">
+            <div style="display:flex;gap:8px;align-items:center;">
         <button class="btn-tirtiary font-mono" onclick="importFromFolder()" title="Import from folder">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:translateY(2px);">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -288,7 +278,14 @@
           </svg>
           Export
         </button>
-      </div>
+        <button class="btn font-mono" onclick="openSidebar()">
+          <span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus inline mr-2">
+              <path d="M5 15h14"></path>
+              <path d="M12 8v14"></path>
+            </svg>
+          </span> New entry
+        </button>
       </div>
     </div>
 
