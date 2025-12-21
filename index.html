@@ -16,7 +16,7 @@
     .font-mono { font-family: 'DM Mono', monospace; }
     .container { max-width: 1200px; margin: 0 auto; padding: 0 40px; }
     .header { padding-top: 40px; display: flex; justify-content: space-between; align-items: flex-start; }
-    .title { font-size: 40px; line-height: 55px; color: #1E654B; }
+    .title { font-size: 40px; line-height: 40px; color: #1E654B; }
     .tagline { font-size: 16px; font-weight: 300; color: #1E1E1E; margin-top: 4px; }
     .btn { 
       background: #1E654B; 
@@ -215,6 +215,13 @@
       cursor: pointer;
       font-size: 16px;
     }
+     .btn-tirtiary {
+      color: #1E1E1E;
+      cursor: pointer;
+      font-size: 12px;
+      padding: 4px 4px;
+    }
+    .btn-tirtiary:hover { color: #1E654B; }
     .btn-delete {
       background: none;
       border: none;
@@ -253,7 +260,7 @@
         <p class="tagline font-mono">Documenting glaze combo and tests</p>
       </div>
       <div style="display:flex;gap:8px;align-items:center;">
-        <button class="btn-secondary font-mono" onclick="importFromFolder()" title="Import from folder">
+        <button class="btn-tirtiary font-mono" onclick="importFromFolder()" title="Import from folder">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:translateY(2px);">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
@@ -261,7 +268,7 @@
           </svg>
           Import
         </button>
-        <button class="btn-secondary font-mono" onclick="exportToFolder()" title="Export to folder">
+        <button class="btn-tirtiary font-mono" onclick="exportToFolder()" title="Export to folder">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:translateY(2px);">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="17 8 12 3 7 8"></polyline>
