@@ -911,28 +911,31 @@
 
             // Auth state listener
             onAuthStateChanged(auth, async (user) => {
-                document.getElementById("loading").classList.add("hidden");
+
+                // Always hide loading first
+                document.getElementById("loading").style.display = "none";
 
                 if (user) {
                     currentUser = user;
-                    document
-                        .getElementById("auth-screen")
-                        .classList.add("hidden");
-                    document.getElementById("app").classList.remove("hidden");
+                    document.getElementById("auth-screen").style.display = "none";
+                    document.getElementById("app").style.display = "block";
 
                     // Show user info
                     const userInfo = document.getElementById("user-info");
                     userInfo.innerHTML = user.photoURL
-                        ? `<img src="${user.photoURL}" alt=""> ${user.email}`
-                        : user.email;
+                        ? `<img src="${escapeHtml(user.photoURL)}" alt=""> ${escapeHtml(user.email)}`
+                        : escapeHtml(user.email);
 
-                    await loadData();
+                    try {
+                        await loadData();
+                    } catch (err) {
+                        console.error("Load data error:", err);
+                        alert("Failed to load data: " + err.message);
+                    }
                 } else {
                     currentUser = null;
-                    document
-                        .getElementById("auth-screen")
-                        .classList.remove("hidden");
-                    document.getElementById("app").classList.add("hidden");
+                    document.getElementById("auth-screen").style.display = "flex";
+                    document.getElementById("app").style.display = "none";
                     pieces = [];
                 }
             });
