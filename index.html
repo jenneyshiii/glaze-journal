@@ -1,965 +1,1606 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Glaze Journal</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Text&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { 
-      font-family: 'DM Sans', sans-serif; 
-      background: #F8F8F8;
-      min-height: 100vh;
-    }
-    .font-serif { font-family: 'DM Serif Text', serif; }
-    .font-mono { font-family: 'DM Mono', monospace; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 0 40px; }
-    .header { padding-top: 40px; display: flex; justify-content: space-between; align-items: flex-start; }
-    .title { font-size: 40px; line-height: 40px; color: #1E654B; }
-    .tagline { font-size: 16px; font-weight: 300; color: #1E1E1E; margin-top: 4px; }
-    .btn { 
-      background: #1E654B; 
-      color: #FFFFFF; 
-      border: none; 
-      border-radius: 100px; 
-      padding: 12px 24px;
-      font-size: 16px;
-      font-weight: 300;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .btn:hover { opacity: 0.9; }
-    .tabs { 
-      padding-top: 24px; 
-      border-bottom: 1px solid #D9D9D9;
-      display: flex;
-      gap: 0;
-    }
-    .tab {
-      padding: 8px 24px;
-      background: none;
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
-      position: relative;
-      color: #757575;
-      font-weight: 300;
-    }
-    .tab.active {
-      color: #1E1E1E;
-      font-weight: 500;
-      border-bottom: 3px solid #1E654B;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-top: 24px;
-      padding-bottom: 80px;
-    }
-    .card {
-      background: white;
-      border: 1px solid #D9D9D9;
-      border-radius: 8px;
-      padding: 8px;
-      cursor: pointer;
-      position: relative;
-    }
-    .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    .card-image {
-      width: 100%;
-      aspect-ratio: 1;
-      background: #E3E3E3;
-      border-radius: 4px;
-      margin-bottom: 16px;
-      overflow: hidden;
-    }
-    .card-image img { width: 100%; height: 100%; object-fit: cover; }
-    .badge {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .badge.good { background: #14AE5C; color:#FFFFFF;}
-    .badge.bad { background: #EC221F; color:#FFFFFF;}
-    .card-glaze { font-size: 14px; color: #1e1e1e; margin-bottom: 4px; position: relative; }
-    .card-glaze[data-tooltip]:not([data-tooltip=""]):hover::after {
-      content: attr(data-tooltip);
-      position: absolute;
-      bottom: 100%;
-      left: 0;
-      background: rgba(0,0,0,0.9);
-      color: white;
-      padding: 8px 12px;
-      border-radius: 4px;
-      white-space: nowrap;
-      z-index: 1000;
-      font-size: 13px;
-      margin-bottom: 4px;
-    }
-    .modal { 
-      display: none;
-      position: fixed; 
-      inset: 0; 
-      background: rgba(0,0,0,0.2); 
-      z-index: 40; 
-    }
-    .modal.show { display: block; }
-    .sidebar {
-      position: fixed;
-      right: -600px;
-      top: 0;
-      width: 600px;
-      height: 100%;
-      background: white;
-      box-shadow: -2px 0 8px rgba(0,0,0,0.1);
-      z-index: 50;
-      overflow-y: auto;
-      transition: right 0.3s;
-    }
-    .sidebar.show { right: 0; }
-    .sidebar-content { padding: 32px; }
-    .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-    .sidebar-title { font-size: 20px; color: #0D382C; font-weight: 300; }
-    .close-btn { background: none; border: none; cursor: pointer; font-size: 24px; }
-    .form-row { display: flex; gap: 24px; margin-bottom: 24px; }
-    .form-group { flex: 1; margin-top: 16px;}
-    .form-group.fixed { width: 2px; flex-shrink: 0; }
-    label { display: block; font-size: 16px; color: #1E1E1E; font-weight: 300; margin-bottom: 8px; }
-    input, textarea, select {
-      padding: 12px 16px;
-      border: 1px solid #D9D9D9;
-      border-radius: 8px;
-      font-size: 16px;
-      font-family: inherit;
-    }
-    textarea { resize: none; height: 96px; width:100%; }
-    .image-upload {
-      width: auto;
-      height: 256px;
-      border: 2px dashed #D9D9D9;
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      background: white;
-    }
-    .image-upload:hover { background: #f9f9f9; }
-    .image-preview {
-      width: 256px;
-      height: 320px;
-      border-radius: 8px;
-      overflow: hidden;
-      position: relative;
-      cursor: pointer;
-    }
-    .image-preview img { width: 100%; height: 100%; object-fit: cover; }
-    .remove-image {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      background: white;
-      border: none;
-      border-radius: 50%;
-      width: 32px;
-      height: 32px;
-      cursor: pointer;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    .glaze-card {
-      background: #F5F5F5;
-      border-radius: 8px;
-      padding: 24px;
-      margin-bottom: 24px;
-    }
-    .layer-card {
-      background: white;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-    .layer-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-    .radio-group { display: flex; gap: 8px; margin-top: 16px; }
-    .radio-label { display: flex; align-items: center; gap: 8px; cursor: pointer;}
-    .footer-actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-top: 24px;
-      border-top: 1px solid #D9D9D9;
-      margin-top:24px;
-    }
-    .btn-group { display: flex; gap: 8px; }
-    .btn-secondary {
-      background: white;
-      color: #1E1E1E;
-      border: 1px solid #757575;
-      border-radius: 100px;
-      padding: 8px 24px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-     .btn-tirtiary {
-      background: transparent;
-      border: none;
-      color: #1E1E1E;
-      cursor: pointer;
-      font-size: 12px;
-      padding: 8px 8px;
-    }
-    .btn-tirtiary:hover { color: #1E654B; text-decoration: underline;}
-    .btn-delete {
-      background: none;
-      border: none;
-      color: #C00F0C;
-      text-decoration: underline;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    .hidden { display: none; }
-    .divider { border-bottom: 1px solid #D9D9D9; margin: 0; }
-    .inline-fields { display: flex; gap: 16px; align-items: center; }
-    .coats-input { width: 80px; }
-    .footer-link {
-      position: relative;
-      bottom: 40px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-    }
-    .footer-link a {
-      color: #1E1E1E;
-      text-decoration: underline;
-      font-size: 14px;
-      font-weight: 300;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
- <div class="header">
-      <div>
-        <h1 class="title font-serif">Glaze journal</h1>
-        <p class="tagline font-mono">Documenting glaze combo and tests</p>
-      </div>
-            <div style="display:flex;gap:8px;align-items:center;">
-        <button class="btn-tirtiary font-mono" onclick="importFromFolder()" title="Import from folder">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:translateY(2px);">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" x2="12" y1="15" y2="3"></line>
-          </svg>
-          Import
-        </button>
-        <button class="btn-tirtiary font-mono" onclick="exportToFolder()" title="Export to folder">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:translateY(2px);">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17 8 12 3 7 8"></polyline>
-            <line x1="12" x2="12" y1="3" y2="15"></line>
-          </svg>
-          Export
-        </button>
-        <button class="btn font-mono" onclick="openSidebar()">
-          <span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus inline mr-2">
-              <path d="M5 15h14"></path>
-              <path d="M12 8v14"></path>
-            </svg>
-          </span> New entry
-        </button>
-      </div>
-    </div>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Glaze Journal</title>
+        <link
+            href="https://fonts.googleapis.com/css2?family=DM+Serif+Text&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@400;500&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: "DM Sans", sans-serif;
+                background: #f8f8f8;
+                min-height: 100vh;
+            }
+            .font-serif {
+                font-family: "DM Serif Text", serif;
+            }
+            .font-mono {
+                font-family: "DM Mono", monospace;
+            }
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 0 40px;
+            }
+            .header {
+                padding-top: 40px;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+            }
+            .title {
+                font-size: 40px;
+                line-height: 40px;
+                color: #1e654b;
+            }
+            .tagline {
+                font-size: 16px;
+                font-weight: 300;
+                color: #1e1e1e;
+                margin-top: 4px;
+            }
+            .btn {
+                background: #1e654b;
+                color: #ffffff;
+                border: none;
+                border-radius: 100px;
+                padding: 12px 24px;
+                font-size: 16px;
+                font-weight: 300;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .btn:hover {
+                opacity: 0.9;
+            }
+            .tabs {
+                padding-top: 24px;
+                border-bottom: 1px solid #d9d9d9;
+                display: flex;
+                gap: 0;
+            }
+            .tab {
+                padding: 8px 24px;
+                background: none;
+                border: none;
+                font-size: 16px;
+                cursor: pointer;
+                position: relative;
+                color: #757575;
+                font-weight: 300;
+            }
+            .tab.active {
+                color: #1e1e1e;
+                font-weight: 500;
+                border-bottom: 3px solid #1e654b;
+            }
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 16px;
+                margin-top: 24px;
+                padding-bottom: 80px;
+            }
+            .card {
+                background: white;
+                border: 1px solid #d9d9d9;
+                border-radius: 8px;
+                padding: 8px;
+                cursor: pointer;
+                position: relative;
+            }
+            .card:hover {
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            }
+            .card-image {
+                width: 100%;
+                aspect-ratio: 1;
+                background: #e3e3e3;
+                border-radius: 4px;
+                margin-bottom: 16px;
+                overflow: hidden;
+            }
+            .card-image img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+            .badge {
+                position: absolute;
+                top: 16px;
+                right: 16px;
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .badge.good {
+                background: #14ae5c;
+                color: #ffffff;
+            }
+            .badge.bad {
+                background: #ec221f;
+                color: #ffffff;
+            }
+            .card-glaze {
+                font-size: 14px;
+                color: #1e1e1e;
+                margin-bottom: 4px;
+                position: relative;
+            }
+            .card-glaze[data-tooltip]:not([data-tooltip=""]):hover::after {
+                content: attr(data-tooltip);
+                position: absolute;
+                bottom: 100%;
+                left: 0;
+                background: rgba(0, 0, 0, 0.9);
+                color: white;
+                padding: 8px 12px;
+                border-radius: 4px;
+                white-space: nowrap;
+                z-index: 1000;
+                font-size: 13px;
+                margin-bottom: 4px;
+            }
+            .modal {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.2);
+                z-index: 40;
+            }
+            .modal.show {
+                display: block;
+            }
+            .sidebar {
+                position: fixed;
+                right: -600px;
+                top: 0;
+                width: 600px;
+                height: 100%;
+                background: white;
+                box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+                z-index: 50;
+                overflow-y: auto;
+                transition: right 0.3s;
+            }
+            .sidebar.show {
+                right: 0;
+            }
+            .sidebar-content {
+                padding: 32px;
+            }
+            .sidebar-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 24px;
+            }
+            .sidebar-title {
+                font-size: 20px;
+                color: #0d382c;
+                font-weight: 300;
+            }
+            .close-btn {
+                background: none;
+                border: none;
+                cursor: pointer;
+                font-size: 24px;
+            }
+            .form-row {
+                display: flex;
+                gap: 24px;
+                margin-bottom: 24px;
+            }
+            .form-group {
+                flex: 1;
+                margin-top: 16px;
+            }
+            .form-group.fixed {
+                width: 2px;
+                flex-shrink: 0;
+            }
+            label {
+                display: block;
+                font-size: 16px;
+                color: #1e1e1e;
+                font-weight: 300;
+                margin-bottom: 8px;
+            }
+            input,
+            textarea,
+            select {
+                padding: 12px 16px;
+                border: 1px solid #d9d9d9;
+                border-radius: 8px;
+                font-size: 16px;
+                font-family: inherit;
+            }
+            textarea {
+                resize: none;
+                height: 96px;
+                width: 100%;
+            }
+            .image-upload {
+                width: auto;
+                height: 256px;
+                border: 2px dashed #d9d9d9;
+                border-radius: 8px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                background: white;
+            }
+            .image-upload:hover {
+                background: #f9f9f9;
+            }
+            .image-preview {
+                width: 256px;
+                height: 320px;
+                border-radius: 8px;
+                overflow: hidden;
+                position: relative;
+                cursor: pointer;
+            }
+            .image-preview img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+            .remove-image {
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                background: white;
+                border: none;
+                border-radius: 50%;
+                width: 32px;
+                height: 32px;
+                cursor: pointer;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
+            .glaze-card {
+                background: #f5f5f5;
+                border-radius: 8px;
+                padding: 24px;
+                margin-bottom: 24px;
+            }
+            .layer-card {
+                background: white;
+                border-radius: 8px;
+                padding: 16px;
+                margin-bottom: 16px;
+            }
+            .layer-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 16px;
+            }
+            .radio-group {
+                display: flex;
+                gap: 8px;
+                margin-top: 16px;
+            }
+            .radio-label {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                cursor: pointer;
+            }
+            .footer-actions {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding-top: 24px;
+                border-top: 1px solid #d9d9d9;
+                margin-top: 24px;
+            }
+            .btn-group {
+                display: flex;
+                gap: 8px;
+            }
+            .btn-secondary {
+                background: white;
+                color: #1e1e1e;
+                border: 1px solid #757575;
+                border-radius: 100px;
+                padding: 8px 24px;
+                cursor: pointer;
+                font-size: 16px;
+            }
+            .btn-tirtiary {
+                background: transparent;
+                border: none;
+                color: #1e1e1e;
+                cursor: pointer;
+                font-size: 12px;
+                padding: 8px 8px;
+            }
+            .btn-tirtiary:hover {
+                color: #1e654b;
+                text-decoration: underline;
+            }
+            .btn-delete {
+                background: none;
+                border: none;
+                color: #c00f0c;
+                text-decoration: underline;
+                cursor: pointer;
+                font-size: 14px;
+            }
+            .hidden {
+                display: none;
+            }
+            .divider {
+                border-bottom: 1px solid #d9d9d9;
+                margin: 0;
+            }
+            .inline-fields {
+                display: flex;
+                gap: 16px;
+                align-items: center;
+            }
+            .coats-input {
+                width: 80px;
+            }
+            .footer-link {
+                position: relative;
+                bottom: 40px;
+                left: 50%;
+                transform: translateX(-50%);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 16px;
+            }
+            .footer-link a {
+                color: #1e1e1e;
+                text-decoration: underline;
+                font-size: 14px;
+                font-weight: 300;
+            }
+            .auth-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                gap: 24px;
+            }
+            .auth-container h1 {
+                margin-bottom: 8px;
+            }
+            .user-info {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-size: 14px;
+                color: #757575;
+            }
+            .user-info img {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+            }
+            .loading {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                font-size: 16px;
+                color: #757575;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- Loading state -->
+        <div id="loading" class="loading font-mono">Loading...</div>
 
-    <div class="tabs font-mono">
-      <button class="tab active" onclick="filterTab('All')">All</button>
-      <button class="tab" onclick="filterTab('Good')">Good</button>
-      <button class="tab" onclick="filterTab('Bad')">Bad</button>
-    </div>
-
-    <div class="grid" id="grid"></div>
-  </div>
-
-  <div class="footer-link">
-    <a href="https://instagram.com/jshi.ceramics" target="_blank" class="font-mono">
-      instagram.com/jshi.ceramics
-    </a>
-  </div>
-
-  <div class="modal" id="modal" onclick="closeSidebar()"></div>
-  <div class="sidebar" id="sidebar">
-    <div class="sidebar-content">
-      <div class="sidebar-header">
-        <h2 class="sidebar-title font-mono" id="sidebar-title">New entry</h2>
-        <button class="close-btn" onclick="closeSidebar()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x text-[#1D1B20]">
-                <path d="M18 6 6 18"></path>
-                <path d="m6 6 12 12"></path>
-            </svg>
-        </button>
-      </div>
-      <div class="divider"></div>
-
-      <form onsubmit="handleSave(event)">
-        <div class="form-row">
-          <div class="form-group fixed">
-            <label>Image</label>
-            <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
-            <div id="uploadArea" class="image-upload" onclick="document.getElementById('imageInput').click()">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-upload text-[#1E1E1E] mb-2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4">
-                </path>
-                <polyline points="17 8 12 3 7 8"></polyline>
-                <line x1="12" x2="12" y1="3" y2="15"></line>
-            </svg>
-              <span style="font-size:14px;color:#757575;margin-top:8px;">Click to upload</span>
+        <!-- Auth screen -->
+        <div id="auth-screen" class="auth-container hidden">
+            <div style="text-align: center">
+                <h1 class="title font-serif">Glaze journal</h1>
+                <p class="tagline font-mono">
+                    Documenting glaze combo and tests
+                </p>
             </div>
-            <div id="previewArea" class="image-preview hidden" onclick="viewFullImage()">
-              <img id="preview" src="" alt="">
-              <button type="button" class="remove-image" onclick="removeImage(event)">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x" style="position: relative; top: 1px;">
-                    <path d="M18 6 6 18"></path>
-                    <path d="m6 6 12 12"></path>
+            <button class="btn font-mono" onclick="signIn()">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                    <polyline points="10 17 15 12 10 7"></polyline>
+                    <line x1="15" x2="3" y1="12" y2="12"></line>
                 </svg>
+                Sign in with Google
             </button>
-            </div>
-          </div>
-
-          <div style="flex:1;">
-            <div class="form-group">
-              <label>Clay</label>
-              <input type="text" id="clay" list="clay-list" placeholder="Select or type...">
-              <datalist id="clay-list"></datalist>
-            </div>
-            <div class="form-group">
-              <label>Firing temperature (°C)</label>
-              <input type="number" id="temperature" placeholder="°C">
-            </div>
-            <div class="form-group">
-              <label>Cone</label>
-              <input type="number" id="cone" placeholder="Number">
-            </div>
-            <div class="radio-group">
-              <label class="radio-label">
-                <input type="radio" name="atmosphere" value="Oxidation" checked> Oxidation
-              </label>
-              <label class="radio-label">
-                <input type="radio" name="atmosphere" value="Reduction"> Reduction
-              </label>
-            </div>
-          </div>
         </div>
 
-        <div class="glaze-card">
-          <h3 class="font-mono" style="margin-bottom:16px; padding-bottom:8px; border-bottom:1px solid #D9D9D9; font-weight:300;">Glaze details</h3>
-          <div id="layers"></div>
-          <button type="button" onclick="addLayer()" style="background:none;border:none;color:#121212;text-decoration:underline;cursor:pointer;font-size:14px;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus">
-                <path d="M5 15h14"></path>
-                <path d="M12 8v14"></path></svg> Add new layer
-          </button>
+        <!-- Main app -->
+        <div id="app" class="hidden">
+            <div class="container">
+                <div class="header">
+                    <div>
+                        <h1 class="title font-serif">Glaze journal</h1>
+                        <p class="tagline font-mono">
+                            Documenting glaze combo and tests
+                        </p>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center">
+                        <div id="user-info" class="user-info"></div>
+                        <button
+                            class="btn-tirtiary font-mono"
+                            onclick="signOut()"
+                            title="Sign out"
+                        >
+                            Sign out
+                        </button>
+                        <button
+                            class="btn-tirtiary font-mono"
+                            onclick="importFromFolder()"
+                            title="Import from folder"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                style="transform: translateY(2px)"
+                            >
+                                <path
+                                    d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                                ></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" x2="12" y1="15" y2="3"></line>
+                            </svg>
+                            Import
+                        </button>
+                        <button
+                            class="btn-tirtiary font-mono"
+                            onclick="exportToFolder()"
+                            title="Export to folder"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                style="transform: translateY(2px)"
+                            >
+                                <path
+                                    d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                                ></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" x2="12" y1="3" y2="15"></line>
+                            </svg>
+                            Export
+                        </button>
+                        <button class="btn font-mono" onclick="openSidebar()">
+                            <span>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    class="lucide lucide-plus inline mr-2"
+                                >
+                                    <path d="M5 15h14"></path>
+                                    <path d="M12 8v14"></path>
+                                </svg>
+                            </span>
+                            New entry
+                        </button>
+                    </div>
+                </div>
+
+                <div class="tabs font-mono">
+                    <button class="tab active" onclick="filterTab('All')">
+                        All
+                    </button>
+                    <button class="tab" onclick="filterTab('Good')">
+                        Good
+                    </button>
+                    <button class="tab" onclick="filterTab('Bad')">Bad</button>
+                </div>
+
+                <div class="grid" id="grid"></div>
+            </div>
+
+            <div class="footer-link">
+                <a
+                    href="https://instagram.com/jshi.ceramics"
+                    target="_blank"
+                    class="font-mono"
+                >
+                    instagram.com/jshi.ceramics
+                </a>
+            </div>
+        </div>
+        <!-- end #app -->
+
+        <div class="modal" id="modal" onclick="closeSidebar()"></div>
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-content">
+                <div class="sidebar-header">
+                    <h2 class="sidebar-title font-mono" id="sidebar-title">
+                        New entry
+                    </h2>
+                    <button class="close-btn" onclick="closeSidebar()">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="lucide lucide-x text-[#1D1B20]"
+                        >
+                            <path d="M18 6 6 18"></path>
+                            <path d="m6 6 12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="divider"></div>
+
+                <form onsubmit="handleSave(event)">
+                    <div class="form-row">
+                        <div class="form-group fixed">
+                            <label>Image</label>
+                            <input
+                                type="file"
+                                id="imageInput"
+                                accept="image/*"
+                                class="hidden"
+                                onchange="handleImageUpload(event)"
+                            />
+                            <div
+                                id="uploadArea"
+                                class="image-upload"
+                                onclick="
+                                    document
+                                        .getElementById('imageInput')
+                                        .click()
+                                "
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    class="lucide lucide-upload text-[#1E1E1E] mb-2"
+                                >
+                                    <path
+                                        d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                                    ></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" x2="12" y1="3" y2="15"></line>
+                                </svg>
+                                <span
+                                    style="
+                                        font-size: 14px;
+                                        color: #757575;
+                                        margin-top: 8px;
+                                    "
+                                    >Click to upload</span
+                                >
+                            </div>
+                            <div
+                                id="previewArea"
+                                class="image-preview hidden"
+                                onclick="viewFullImage()"
+                            >
+                                <img id="preview" src="" alt="" />
+                                <button
+                                    type="button"
+                                    class="remove-image"
+                                    onclick="removeImage(event)"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        class="lucide lucide-x"
+                                        style="position: relative; top: 1px"
+                                    >
+                                        <path d="M18 6 6 18"></path>
+                                        <path d="m6 6 12 12"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="flex: 1">
+                            <div class="form-group">
+                                <label>Clay</label>
+                                <input
+                                    type="text"
+                                    id="clay"
+                                    list="clay-list"
+                                    placeholder="Select or type..."
+                                />
+                                <datalist id="clay-list"></datalist>
+                            </div>
+                            <div class="form-group">
+                                <label>Firing temperature (°C)</label>
+                                <input
+                                    type="number"
+                                    id="temperature"
+                                    placeholder="°C"
+                                />
+                            </div>
+                            <div class="form-group">
+                                <label>Cone</label>
+                                <input
+                                    type="number"
+                                    id="cone"
+                                    placeholder="Number"
+                                />
+                            </div>
+                            <div class="radio-group">
+                                <label class="radio-label">
+                                    <input
+                                        type="radio"
+                                        name="atmosphere"
+                                        value="Oxidation"
+                                        checked
+                                    />
+                                    Oxidation
+                                </label>
+                                <label class="radio-label">
+                                    <input
+                                        type="radio"
+                                        name="atmosphere"
+                                        value="Reduction"
+                                    />
+                                    Reduction
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glaze-card">
+                        <h3
+                            class="font-mono"
+                            style="
+                                margin-bottom: 16px;
+                                padding-bottom: 8px;
+                                border-bottom: 1px solid #d9d9d9;
+                                font-weight: 300;
+                            "
+                        >
+                            Glaze details
+                        </h3>
+                        <div id="layers"></div>
+                        <button
+                            type="button"
+                            onclick="addLayer()"
+                            style="
+                                background: none;
+                                border: none;
+                                color: #121212;
+                                text-decoration: underline;
+                                cursor: pointer;
+                                font-size: 14px;
+                            "
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="lucide lucide-plus"
+                            >
+                                <path d="M5 15h14"></path>
+                                <path d="M12 8v14"></path>
+                            </svg>
+                            Add new layer
+                        </button>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Result</label>
+                        <div class="radio-group" style="margin-top: 8px">
+                            <label class="radio-label">
+                                <input
+                                    type="radio"
+                                    name="result"
+                                    value="Good"
+                                    checked
+                                />
+                                Good
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="result" value="Bad" />
+                                Bad
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea
+                            id="notes"
+                            placeholder="Add any notes..."
+                        ></textarea>
+                    </div>
+
+                    <div class="footer-actions">
+                        <button
+                            type="button"
+                            id="deleteBtn"
+                            class="btn-delete hidden"
+                            onclick="deletePiece()"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="lucide lucide-trash2"
+                                style="transform: translateY(4px)"
+                            >
+                                <path d="M3 6h18"></path>
+                                <path
+                                    d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"
+                                ></path>
+                                <path
+                                    d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"
+                                ></path>
+                                <line x1="10" x2="10" y1="11" y2="17"></line>
+                                <line x1="14" x2="14" y1="11" y2="17"></line>
+                            </svg>
+                            Delete
+                        </button>
+                        <div class="btn-group">
+                            <button
+                                type="button"
+                                class="btn-secondary font-mono"
+                                onclick="closeSidebar()"
+                            >
+                                Cancel
+                            </button>
+                            <button type="submit" class="btn font-mono">
+                                Save entry
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
 
-        <div class="form-group">
-          <label>Result</label>
-          <div class="radio-group" style="margin-top:8px;">
-            <label class="radio-label">
-              <input type="radio" name="result" value="Good" checked> Good
-            </label>
-            <label class="radio-label">
-              <input type="radio" name="result" value="Bad"> Bad
-            </label>
-          </div>
-        </div>
+        <script type="module">
+            // ============================================
+            // FIREBASE CONFIGURATION
+            // ============================================
+            // TODO: Replace with your Firebase project config from:
+            // https://console.firebase.google.com > Project Settings > Your apps > Web app
+            const firebaseConfig = {
+                apiKey: "YOUR_API_KEY",
+                authDomain: "YOUR_PROJECT.firebaseapp.com",
+                projectId: "YOUR_PROJECT_ID",
+                storageBucket: "YOUR_PROJECT.firebasestorage.app",
+                messagingSenderId: "YOUR_SENDER_ID",
+                appId: "YOUR_APP_ID",
+            };
+            // ============================================
 
-        <div class="form-group">
-          <label>Notes</label>
-          <textarea id="notes" placeholder="Add any notes..."></textarea>
-        </div>
+            // Firebase imports
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+            import {
+                getAuth,
+                signInWithPopup,
+                GoogleAuthProvider,
+                onAuthStateChanged,
+                signOut as firebaseSignOut,
+            } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+            import {
+                getFirestore,
+                collection,
+                doc,
+                setDoc,
+                getDoc,
+                getDocs,
+                deleteDoc,
+            } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+            import {
+                getStorage,
+                ref,
+                uploadBytes,
+                getDownloadURL,
+                deleteObject,
+            } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-storage.js";
 
-        <div class="footer-actions">
-          <button type="button" id="deleteBtn" class="btn-delete hidden" onclick="deletePiece()" >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2" style="transform: translateY(4px);">
-                <path d="M3 6h18"></path>
-                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                <line x1="10" x2="10" y1="11" y2="17"></line>
-                <line x1="14" x2="14" y1="11" y2="17"></line>
-            </svg> Delete
-          </button>
-          <div class="btn-group">
-            <button type="button" class="btn-secondary font-mono" onclick="closeSidebar()">Cancel</button>
-            <button type="submit" class="btn font-mono">Save entry</button>
-          </div>
-        </div>
-      </form>
-    </div>
-  </div>
+            // Initialize Firebase
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+            const storage = getStorage(app);
+            const provider = new GoogleAuthProvider();
 
-  <script>
-    let pieces = [];
-    let currentTab = 'All';
-    let editingId = null;
-    let currentImage = null;
-    let currentImageBlob = null;
-    let clayOptions = ['Porcelain', 'Stoneware', 'Earthenware'];
-    let brandOptions = ['Amaco', 'Mayco', 'Botz'];
-    let glazeOptions = ['Celadon', 'Tenmoku', 'Shino'];
+            // App state
+            let currentUser = null;
+            let pieces = [];
+            let currentTab = "All";
+            let editingId = null;
+            let currentImage = null;
+            let currentImageBlob = null;
+            let currentImageUrl = null; // For existing Firebase Storage URLs
+            let clayOptions = ["Porcelain", "Stoneware", "Earthenware"];
+            let brandOptions = ["Amaco", "Mayco", "Botz"];
+            let glazeOptions = ["Celadon", "Tenmoku", "Shino"];
 
-    // IndexedDB setup
-    let db = null;
-    const DB_NAME = 'glaze-journal';
-    const DB_VERSION = 1;
+            // Auth functions
+            window.signIn = async function () {
+                try {
+                    await signInWithPopup(auth, provider);
+                } catch (error) {
+                    console.error("Sign in error:", error);
+                    alert("Sign in failed: " + error.message);
+                }
+            };
 
-    function openDatabase() {
-      return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, DB_VERSION);
+            window.signOut = async function () {
+                try {
+                    await firebaseSignOut(auth);
+                } catch (error) {
+                    console.error("Sign out error:", error);
+                }
+            };
 
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => {
-          db = request.result;
-          resolve(db);
-        };
+            // Auth state listener
+            onAuthStateChanged(auth, async (user) => {
+                document.getElementById("loading").classList.add("hidden");
 
-        request.onupgradeneeded = (e) => {
-          const database = e.target.result;
-          if (!database.objectStoreNames.contains('pieces')) {
-            database.createObjectStore('pieces', { keyPath: 'id' });
-          }
-          if (!database.objectStoreNames.contains('images')) {
-            database.createObjectStore('images', { keyPath: 'id' });
-          }
-          if (!database.objectStoreNames.contains('options')) {
-            database.createObjectStore('options', { keyPath: 'key' });
-          }
-        };
-      });
-    }
+                if (user) {
+                    currentUser = user;
+                    document
+                        .getElementById("auth-screen")
+                        .classList.add("hidden");
+                    document.getElementById("app").classList.remove("hidden");
 
-    async function loadData() {
-      await openDatabase();
+                    // Show user info
+                    const userInfo = document.getElementById("user-info");
+                    userInfo.innerHTML = user.photoURL
+                        ? `<img src="${user.photoURL}" alt=""> ${user.email}`
+                        : user.email;
 
-      // Load pieces from IndexedDB
-      const piecesData = await getAllFromStore('pieces');
-      pieces = piecesData;
+                    await loadData();
+                } else {
+                    currentUser = null;
+                    document
+                        .getElementById("auth-screen")
+                        .classList.remove("hidden");
+                    document.getElementById("app").classList.add("hidden");
+                    pieces = [];
+                }
+            });
 
-      // Load options
-      const clayData = await getFromStore('options', 'clay');
-      if (clayData) clayOptions = clayData.values;
+            // Firebase data functions
+            async function loadData() {
+                try {
+                    // Load pieces
+                    const piecesRef = collection(
+                        db,
+                        "users",
+                        currentUser.uid,
+                        "pieces",
+                    );
+                    const piecesSnapshot = await getDocs(piecesRef);
+                    pieces = piecesSnapshot.docs.map((doc) => ({
+                        id: doc.id,
+                        ...doc.data(),
+                    }));
 
-      const brandData = await getFromStore('options', 'brand');
-      if (brandData) brandOptions = brandData.values;
+                    // Load options
+                    const optionsRef = doc(
+                        db,
+                        "users",
+                        currentUser.uid,
+                        "options",
+                        "settings",
+                    );
+                    const optionsDoc = await getDoc(optionsRef);
+                    if (optionsDoc.exists()) {
+                        const data = optionsDoc.data();
+                        if (data.clay) clayOptions = data.clay;
+                        if (data.brand) brandOptions = data.brand;
+                        if (data.glaze) glazeOptions = data.glaze;
+                    }
 
-      const glazeData = await getFromStore('options', 'glaze');
-      if (glazeData) glazeOptions = glazeData.values;
-
-      updateDataLists();
-      renderGrid();
-    }
-
-    function getAllFromStore(storeName) {
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction(storeName, 'readonly');
-        const store = tx.objectStore(storeName);
-        const request = store.getAll();
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
-    }
-
-    function getFromStore(storeName, key) {
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction(storeName, 'readonly');
-        const store = tx.objectStore(storeName);
-        const request = store.get(key);
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
-    }
-
-    function putInStore(storeName, data) {
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction(storeName, 'readwrite');
-        const store = tx.objectStore(storeName);
-        const request = store.put(data);
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
-    }
-
-    function deleteFromStore(storeName, key) {
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction(storeName, 'readwrite');
-        const store = tx.objectStore(storeName);
-        const request = store.delete(key);
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
-      });
-    }
-
-    async function saveImage(id, blob) {
-      await putInStore('images', { id, blob });
-    }
-
-    async function getImage(id) {
-      const data = await getFromStore('images', id);
-      return data ? data.blob : null;
-    }
-
-    async function deleteImage(id) {
-      await deleteFromStore('images', id);
-    }
-
-    async function saveData() {
-      // Save options
-      await putInStore('options', { key: 'clay', values: clayOptions });
-      await putInStore('options', { key: 'brand', values: brandOptions });
-      await putInStore('options', { key: 'glaze', values: glazeOptions });
-    }
-
-    async function savePiece(piece) {
-      await putInStore('pieces', piece);
-      await saveData();
-    }
-
-    async function deletePieceFromDB(id) {
-      await deleteFromStore('pieces', id);
-      await deleteImage(id);
-    }
-
-    // File System Access API - Export/Import
-    async function exportToFolder() {
-      if (!window.showDirectoryPicker) {
-        alert('Export requires Chrome or Edge browser.\n\nSafari and Firefox do not support this feature.');
-        return;
-      }
-      try {
-        const dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-
-        // Create images subfolder
-        const imagesDir = await dirHandle.getDirectoryHandle('images', { create: true });
-
-        // Export each image
-        const piecesForExport = [];
-        for (const piece of pieces) {
-          const pieceData = { ...piece };
-
-          if (piece.imageId) {
-            const blob = await getImage(piece.imageId);
-            if (blob) {
-              const ext = blob.type.split('/')[1] || 'jpg';
-              const filename = `${piece.imageId}.${ext}`;
-              const fileHandle = await imagesDir.getFileHandle(filename, { create: true });
-              const writable = await fileHandle.createWritable();
-              await writable.write(blob);
-              await writable.close();
-              pieceData.imageFile = `images/${filename}`;
+                    updateDataLists();
+                    renderGrid();
+                } catch (error) {
+                    console.error("Load data error:", error);
+                    alert("Failed to load data: " + error.message);
+                }
             }
-          }
-          delete pieceData.imageId;
-          piecesForExport.push(pieceData);
-        }
 
-        // Export data.json
-        const data = {
-          pieces: piecesForExport,
-          options: { clay: clayOptions, brand: brandOptions, glaze: glazeOptions },
-          exportedAt: new Date().toISOString()
-        };
-
-        const dataFile = await dirHandle.getFileHandle('data.json', { create: true });
-        const writable = await dataFile.createWritable();
-        await writable.write(JSON.stringify(data, null, 2));
-        await writable.close();
-
-        alert('Export complete!');
-      } catch (err) {
-        if (err.name !== 'AbortError') {
-          console.error('Export failed:', err);
-          alert('Export failed: ' + err.message);
-        }
-      }
-    }
-
-    async function importFromFolder() {
-      if (!window.showDirectoryPicker) {
-        alert('Import requires Chrome or Edge browser.\n\nSafari and Firefox do not support this feature.');
-        return;
-      }
-      try {
-        const dirHandle = await window.showDirectoryPicker({ mode: 'read' });
-
-        // Read data.json
-        const dataFile = await dirHandle.getFileHandle('data.json');
-        const file = await dataFile.getFile();
-        const data = JSON.parse(await file.text());
-
-        // Import options
-        if (data.options) {
-          clayOptions = data.options.clay || clayOptions;
-          brandOptions = data.options.brand || brandOptions;
-          glazeOptions = data.options.glaze || glazeOptions;
-        }
-
-        // Try to get images folder
-        let imagesDir = null;
-        try {
-          imagesDir = await dirHandle.getDirectoryHandle('images');
-        } catch (e) {}
-
-        // Import pieces and images
-        for (const piece of data.pieces) {
-          const newPiece = { ...piece, id: piece.id || Date.now() + Math.random() };
-
-          if (piece.imageFile && imagesDir) {
-            try {
-              const filename = piece.imageFile.replace('images/', '');
-              const imageFileHandle = await imagesDir.getFileHandle(filename);
-              const imageFile = await imageFileHandle.getFile();
-              const blob = await imageFile.slice();
-
-              newPiece.imageId = newPiece.id;
-              await saveImage(newPiece.id, blob);
-            } catch (e) {
-              console.warn('Could not load image:', piece.imageFile);
+            async function saveOptions() {
+                const optionsRef = doc(
+                    db,
+                    "users",
+                    currentUser.uid,
+                    "options",
+                    "settings",
+                );
+                await setDoc(optionsRef, {
+                    clay: clayOptions,
+                    brand: brandOptions,
+                    glaze: glazeOptions,
+                });
             }
-          }
-          delete newPiece.imageFile;
 
-          pieces.push(newPiece);
-          await putInStore('pieces', newPiece);
-        }
+            async function savePiece(piece) {
+                const pieceRef = doc(
+                    db,
+                    "users",
+                    currentUser.uid,
+                    "pieces",
+                    String(piece.id),
+                );
+                await setDoc(pieceRef, piece);
+                await saveOptions();
+            }
 
-        await saveData();
-        updateDataLists();
-        renderGrid();
+            async function deletePieceFromDB(id) {
+                const piece = pieces.find((p) => p.id === id);
 
-        alert('Import complete! ' + data.pieces.length + ' entries imported.');
-      } catch (err) {
-        if (err.name !== 'AbortError') {
-          console.error('Import failed:', err);
-          alert('Import failed: ' + err.message);
-        }
-      }
-    }
+                // Delete image from Storage if exists
+                if (piece?.imageUrl) {
+                    try {
+                        const imageRef = ref(
+                            storage,
+                            `users/${currentUser.uid}/images/${id}`,
+                        );
+                        await deleteObject(imageRef);
+                    } catch (e) {
+                        console.warn("Could not delete image:", e);
+                    }
+                }
 
-    function updateDataLists() {
-      document.getElementById('clay-list').innerHTML = clayOptions.map(o => `<option value="${escapeHtml(o)}">`).join('');
-    }
+                // Delete piece from Firestore
+                const pieceRef = doc(
+                    db,
+                    "users",
+                    currentUser.uid,
+                    "pieces",
+                    String(id),
+                );
+                await deleteDoc(pieceRef);
+            }
 
-    function addToOptions(value, array) {
-      if (value && !array.includes(value)) array.push(value);
-    }
+            async function uploadImage(id, blob) {
+                const imageRef = ref(
+                    storage,
+                    `users/${currentUser.uid}/images/${id}`,
+                );
+                await uploadBytes(imageRef, blob);
+                return await getDownloadURL(imageRef);
+            }
 
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
+            async function deleteImageFromStorage(id) {
+                try {
+                    const imageRef = ref(
+                        storage,
+                        `users/${currentUser.uid}/images/${id}`,
+                    );
+                    await deleteObject(imageRef);
+                } catch (e) {
+                    console.warn("Could not delete image:", e);
+                }
+            }
 
-    async function renderGrid() {
-      const filtered = pieces.filter(p => {
-        if (currentTab === 'All') return true;
-        return p.result === currentTab;
-      });
+            // Export/Import with Firebase
+            window.exportToFolder = async function () {
+                if (!window.showDirectoryPicker) {
+                    alert(
+                        "Export requires Chrome or Edge browser.\n\nSafari and Firefox do not support this feature.",
+                    );
+                    return;
+                }
+                try {
+                    const dirHandle = await window.showDirectoryPicker({
+                        mode: "readwrite",
+                    });
+                    const imagesDir = await dirHandle.getDirectoryHandle(
+                        "images",
+                        { create: true },
+                    );
 
-      const grid = document.getElementById('grid');
-      grid.innerHTML = '';
+                    const piecesForExport = [];
+                    for (const piece of pieces) {
+                        const pieceData = { ...piece };
 
-      for (const p of filtered) {
-        const layers = p.layers || [];
-        const count = layers.length;
+                        if (piece.imageUrl) {
+                            try {
+                                const response = await fetch(piece.imageUrl);
+                                const blob = await response.blob();
+                                const ext = blob.type.split("/")[1] || "jpg";
+                                const filename = `${piece.id}.${ext}`;
+                                const fileHandle =
+                                    await imagesDir.getFileHandle(filename, {
+                                        create: true,
+                                    });
+                                const writable =
+                                    await fileHandle.createWritable();
+                                await writable.write(blob);
+                                await writable.close();
+                                pieceData.imageFile = `images/${filename}`;
+                            } catch (e) {
+                                console.warn("Could not export image:", e);
+                            }
+                        }
+                        delete pieceData.imageUrl;
+                        piecesForExport.push(pieceData);
+                    }
 
-        // Show up to 2 glaze names, then +N for remaining
-        let glazeText = layers[0]?.glaze || 'Untitled';
-        if (count === 2) {
-          glazeText += `, ${layers[1]?.glaze || 'Untitled'}`;
-        } else if (count > 2) {
-          glazeText += `, ${layers[1]?.glaze || 'Untitled'} +${count - 2}`;
-        }
+                    const data = {
+                        pieces: piecesForExport,
+                        options: {
+                            clay: clayOptions,
+                            brand: brandOptions,
+                            glaze: glazeOptions,
+                        },
+                        exportedAt: new Date().toISOString(),
+                    };
 
-        // Tooltip only if more than 2 layers
-        const tooltip = count > 2
-          ? layers.map(l => l.glaze).filter(Boolean).join(', ')
-          : '';
+                    const dataFile = await dirHandle.getFileHandle(
+                        "data.json",
+                        { create: true },
+                    );
+                    const writable = await dataFile.createWritable();
+                    await writable.write(JSON.stringify(data, null, 2));
+                    await writable.close();
 
-        const card = document.createElement('div');
-        card.className = 'card font-mono';
-        card.onclick = () => editPiece(p.id);
+                    alert("Export complete!");
+                } catch (err) {
+                    if (err.name !== "AbortError") {
+                        console.error("Export failed:", err);
+                        alert("Export failed: " + err.message);
+                    }
+                }
+            };
 
-        let imageHtml = '';
-        if (p.imageId) {
-          const blob = await getImage(p.imageId);
-          if (blob) {
-            const url = URL.createObjectURL(blob);
-            imageHtml = `<img src="${url}" alt="">`;
-          }
-        }
+            window.importFromFolder = async function () {
+                if (!window.showDirectoryPicker) {
+                    alert(
+                        "Import requires Chrome or Edge browser.\n\nSafari and Firefox do not support this feature.",
+                    );
+                    return;
+                }
+                try {
+                    const dirHandle = await window.showDirectoryPicker({
+                        mode: "read",
+                    });
 
-        card.innerHTML = `
+                    const dataFile = await dirHandle.getFileHandle("data.json");
+                    const file = await dataFile.getFile();
+                    const data = JSON.parse(await file.text());
+
+                    if (data.options) {
+                        clayOptions = data.options.clay || clayOptions;
+                        brandOptions = data.options.brand || brandOptions;
+                        glazeOptions = data.options.glaze || glazeOptions;
+                    }
+
+                    let imagesDir = null;
+                    try {
+                        imagesDir =
+                            await dirHandle.getDirectoryHandle("images");
+                    } catch (e) {}
+
+                    let importCount = 0;
+                    for (const piece of data.pieces) {
+                        const newPiece = {
+                            ...piece,
+                            id: piece.id || Date.now() + Math.random(),
+                        };
+
+                        if (piece.imageFile && imagesDir) {
+                            try {
+                                const filename = piece.imageFile.replace(
+                                    "images/",
+                                    "",
+                                );
+                                const imageFileHandle =
+                                    await imagesDir.getFileHandle(filename);
+                                const imageFile =
+                                    await imageFileHandle.getFile();
+                                const blob = await imageFile.slice();
+
+                                const imageUrl = await uploadImage(
+                                    newPiece.id,
+                                    blob,
+                                );
+                                newPiece.imageUrl = imageUrl;
+                            } catch (e) {
+                                console.warn(
+                                    "Could not import image:",
+                                    piece.imageFile,
+                                );
+                            }
+                        }
+                        delete newPiece.imageFile;
+
+                        pieces.push(newPiece);
+                        await savePiece(newPiece);
+                        importCount++;
+                    }
+
+                    await saveOptions();
+                    updateDataLists();
+                    renderGrid();
+
+                    alert(
+                        "Import complete! " +
+                            importCount +
+                            " entries imported.",
+                    );
+                } catch (err) {
+                    if (err.name !== "AbortError") {
+                        console.error("Import failed:", err);
+                        alert("Import failed: " + err.message);
+                    }
+                }
+            };
+
+            function updateDataLists() {
+                document.getElementById("clay-list").innerHTML = clayOptions
+                    .map((o) => `<option value="${escapeHtml(o)}">`)
+                    .join("");
+            }
+
+            function addToOptions(value, array) {
+                if (value && !array.includes(value)) array.push(value);
+            }
+
+            function escapeHtml(str) {
+                if (!str) return "";
+                return String(str)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#39;");
+            }
+
+            function renderGrid() {
+                const filtered = pieces.filter((p) => {
+                    if (currentTab === "All") return true;
+                    return p.result === currentTab;
+                });
+
+                const grid = document.getElementById("grid");
+                grid.innerHTML = "";
+
+                for (const p of filtered) {
+                    const layers = p.layers || [];
+                    const count = layers.length;
+
+                    let glazeText = layers[0]?.glaze || "Untitled";
+                    if (count === 2) {
+                        glazeText += `, ${layers[1]?.glaze || "Untitled"}`;
+                    } else if (count > 2) {
+                        glazeText += `, ${layers[1]?.glaze || "Untitled"} +${count - 2}`;
+                    }
+
+                    const tooltip =
+                        count > 2
+                            ? layers
+                                  .map((l) => l.glaze)
+                                  .filter(Boolean)
+                                  .join(", ")
+                            : "";
+
+                    const card = document.createElement("div");
+                    card.className = "card font-mono";
+                    card.onclick = () => editPiece(p.id);
+
+                    const imageHtml = p.imageUrl
+                        ? `<img src="${p.imageUrl}" alt="">`
+                        : "";
+
+                    card.innerHTML = `
           <div class="card-image">${imageHtml}</div>
-          <div class="badge ${p.result === 'Good' ? 'good' : 'bad'}">
-            ${p.result === 'Good' ? '✓' : '✕'}
+          <div class="badge ${p.result === "Good" ? "good" : "bad"}">
+            ${p.result === "Good" ? "✓" : "✕"}
           </div>
-          <div class="card-glaze" ${tooltip ? `data-tooltip="${escapeHtml(tooltip)}"` : ''}>${escapeHtml(glazeText)}</div>
+          <div class="card-glaze" ${tooltip ? `data-tooltip="${escapeHtml(tooltip)}"` : ""}>${escapeHtml(glazeText)}</div>
         `;
 
-        grid.appendChild(card);
-      }
-    }
+                    grid.appendChild(card);
+                }
+            }
 
-    function filterTab(tab) {
-      currentTab = tab;
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      event.target.classList.add('active');
-      renderGrid();
-    }
+            window.filterTab = function (tab) {
+                currentTab = tab;
+                document
+                    .querySelectorAll(".tab")
+                    .forEach((t) => t.classList.remove("active"));
+                event.target.classList.add("active");
+                renderGrid();
+            };
 
-    function openSidebar() {
-      editingId = null;
-      currentImage = null;
-      currentImageBlob = null;
-      document.getElementById('sidebar-title').textContent = 'New entry';
-      document.getElementById('deleteBtn').classList.add('hidden');
-      document.querySelector('form').reset();
-      document.getElementById('uploadArea').classList.remove('hidden');
-      document.getElementById('previewArea').classList.add('hidden');
-      renderLayers([{ brand: '', glaze: '', application: 'Dipped', coats: '' }]);
-      document.getElementById('modal').classList.add('show');
-      document.getElementById('sidebar').classList.add('show');
-    }
+            window.openSidebar = function () {
+                editingId = null;
+                currentImage = null;
+                currentImageBlob = null;
+                currentImageUrl = null;
+                document.getElementById("sidebar-title").textContent =
+                    "New entry";
+                document.getElementById("deleteBtn").classList.add("hidden");
+                document.querySelector("form").reset();
+                document
+                    .getElementById("uploadArea")
+                    .classList.remove("hidden");
+                document.getElementById("previewArea").classList.add("hidden");
+                renderLayers([
+                    { brand: "", glaze: "", application: "Dipped", coats: "" },
+                ]);
+                document.getElementById("modal").classList.add("show");
+                document.getElementById("sidebar").classList.add("show");
+            };
 
-    async function editPiece(id) {
-      const piece = pieces.find(p => p.id === id);
-      if (!piece) return;
+            window.editPiece = function (id) {
+                const piece = pieces.find((p) => p.id === id);
+                if (!piece) return;
 
-      editingId = id;
-      currentImage = null;
-      currentImageBlob = null;
-      document.getElementById('sidebar-title').textContent = 'Edit entry';
-      document.getElementById('deleteBtn').classList.remove('hidden');
+                editingId = id;
+                currentImage = null;
+                currentImageBlob = null;
+                currentImageUrl = piece.imageUrl || null;
 
-      document.getElementById('clay').value = piece.clay || '';
-      document.getElementById('temperature').value = piece.temperature || '';
-      document.getElementById('cone').value = piece.cone || '';
-      document.getElementById('notes').value = piece.notes || '';
-      document.querySelector(`input[name="atmosphere"][value="${piece.atmosphere || 'Oxidation'}"]`).checked = true;
-      document.querySelector(`input[name="result"][value="${piece.result || 'Good'}"]`).checked = true;
+                document.getElementById("sidebar-title").textContent =
+                    "Edit entry";
+                document.getElementById("deleteBtn").classList.remove("hidden");
 
-      if (piece.imageId) {
-        const blob = await getImage(piece.imageId);
-        if (blob) {
-          currentImageBlob = blob;
-          currentImage = URL.createObjectURL(blob);
-          document.getElementById('preview').src = currentImage;
-          document.getElementById('uploadArea').classList.add('hidden');
-          document.getElementById('previewArea').classList.remove('hidden');
-        }
-      } else {
-        document.getElementById('uploadArea').classList.remove('hidden');
-        document.getElementById('previewArea').classList.add('hidden');
-      }
+                document.getElementById("clay").value = piece.clay || "";
+                document.getElementById("temperature").value =
+                    piece.temperature || "";
+                document.getElementById("cone").value = piece.cone || "";
+                document.getElementById("notes").value = piece.notes || "";
+                document.querySelector(
+                    `input[name="atmosphere"][value="${piece.atmosphere || "Oxidation"}"]`,
+                ).checked = true;
+                document.querySelector(
+                    `input[name="result"][value="${piece.result || "Good"}"]`,
+                ).checked = true;
 
-      renderLayers(piece.layers || [{ brand: '', glaze: '', application: 'Dipped', coats: '' }]);
-      document.getElementById('modal').classList.add('show');
-      document.getElementById('sidebar').classList.add('show');
-    }
+                if (piece.imageUrl) {
+                    currentImage = piece.imageUrl;
+                    document.getElementById("preview").src = piece.imageUrl;
+                    document
+                        .getElementById("uploadArea")
+                        .classList.add("hidden");
+                    document
+                        .getElementById("previewArea")
+                        .classList.remove("hidden");
+                } else {
+                    document
+                        .getElementById("uploadArea")
+                        .classList.remove("hidden");
+                    document
+                        .getElementById("previewArea")
+                        .classList.add("hidden");
+                }
 
-    function closeSidebar() {
-      document.getElementById('modal').classList.remove('show');
-      document.getElementById('sidebar').classList.remove('show');
-    }
+                renderLayers(
+                    piece.layers || [
+                        {
+                            brand: "",
+                            glaze: "",
+                            application: "Dipped",
+                            coats: "",
+                        },
+                    ],
+                );
+                document.getElementById("modal").classList.add("show");
+                document.getElementById("sidebar").classList.add("show");
+            };
 
-    function renderLayers(layers = []) {
-      const container = document.getElementById('layers');
-      container.innerHTML = layers.map((layer, i) => `
+            window.closeSidebar = function () {
+                document.getElementById("modal").classList.remove("show");
+                document.getElementById("sidebar").classList.remove("show");
+            };
+
+            function renderLayers(layers = []) {
+                const container = document.getElementById("layers");
+                container.innerHTML = layers
+                    .map(
+                        (layer, i) => `
         <div class="layer-card">
           <div class="layer-header">
-            <span style="font-weight:400; font-size:14px;">${i === 0 ? 'Base layer' : `Layer ${i + 1}`}</span>
-            ${i > 0 ? `<button type="button" onclick="removeLayer(${i})" style="color:#C00F0C; background:none; border:none; cursor:pointer; text-decoration:underline; font-size:14px;">Remove</button>` : ''}
+            <span style="font-weight:400; font-size:14px;">${i === 0 ? "Base layer" : `Layer ${i + 1}`}</span>
+            ${i > 0 ? `<button type="button" onclick="removeLayer(${i})" style="color:#C00F0C; background:none; border:none; cursor:pointer; text-decoration:underline; font-size:14px;">Remove</button>` : ""}
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
             <div>
               <label>Brand</label>
               <input type="text" class="layer-brand" value="${escapeHtml(layer.brand)}" list="brand-list-${i}">
-              <datalist id="brand-list-${i}">${brandOptions.map(o => `<option value="${escapeHtml(o)}">`).join('')}</datalist>
+              <datalist id="brand-list-${i}">${brandOptions.map((o) => `<option value="${escapeHtml(o)}">`).join("")}</datalist>
             </div>
             <div>
               <label>Glaze name</label>
               <input type="text" class="layer-glaze" value="${escapeHtml(layer.glaze)}" list="glaze-list-${i}">
-              <datalist id="glaze-list-${i}">${glazeOptions.map(o => `<option value="${escapeHtml(o)}">`).join('')}</datalist>
+              <datalist id="glaze-list-${i}">${glazeOptions.map((o) => `<option value="${escapeHtml(o)}">`).join("")}</datalist>
             </div>
           </div>
           <div class="inline-fields">
             <div>
               <label>Coats:</label>
-              <input type="number" class="layer-coats coats-input" value="${escapeHtml(layer.coats) || ''}" min="0">
+              <input type="number" class="layer-coats coats-input" value="${escapeHtml(layer.coats) || ""}" min="0">
             </div>
             <div class="radio-group" style="padding-top:16px;">
               <label class="radio-label">
-                <input type="radio" name="app${i}" value="Dipped" ${layer.application === 'Dipped' ? 'checked' : ''}> Dipped
+                <input type="radio" name="app${i}" value="Dipped" ${layer.application === "Dipped" ? "checked" : ""}> Dipped
               </label>
               <label class="radio-label">
-                <input type="radio" name="app${i}" value="Brushed" ${layer.application === 'Brushed' ? 'checked' : ''}> Brushed
+                <input type="radio" name="app${i}" value="Brushed" ${layer.application === "Brushed" ? "checked" : ""}> Brushed
               </label>
             </div>
           </div>
         </div>
-      `).join('');
-    }
+      `,
+                    )
+                    .join("");
+            }
 
-    function addLayer() {
-      const brands = Array.from(document.querySelectorAll('.layer-brand')).map(i => i.value);
-      const glazes = Array.from(document.querySelectorAll('.layer-glaze')).map(i => i.value);
-      const coats = Array.from(document.querySelectorAll('.layer-coats')).map(i => i.value);
-      const apps = Array.from(document.querySelectorAll('[name^="app"]')).filter(i => i.checked).map(i => i.value);
-      
-      const layers = brands.map((b, i) => ({
-        brand: b,
-        glaze: glazes[i],
-        application: apps[i],
-        coats: coats[i]
-      }));
-      
-      layers.push({ brand: '', glaze: '', application: 'Dipped', coats: '' });
-      renderLayers(layers);
-    }
+            window.addLayer = function () {
+                const brands = Array.from(
+                    document.querySelectorAll(".layer-brand"),
+                ).map((i) => i.value);
+                const glazes = Array.from(
+                    document.querySelectorAll(".layer-glaze"),
+                ).map((i) => i.value);
+                const coats = Array.from(
+                    document.querySelectorAll(".layer-coats"),
+                ).map((i) => i.value);
+                const apps = Array.from(
+                    document.querySelectorAll('[name^="app"]'),
+                )
+                    .filter((i) => i.checked)
+                    .map((i) => i.value);
 
-    function removeLayer(index) {
-      const brands = Array.from(document.querySelectorAll('.layer-brand')).map(i => i.value);
-      const glazes = Array.from(document.querySelectorAll('.layer-glaze')).map(i => i.value);
-      const coats = Array.from(document.querySelectorAll('.layer-coats')).map(i => i.value);
-      const apps = Array.from(document.querySelectorAll('[name^="app"]')).filter(i => i.checked).map(i => i.value);
-      
-      const layers = brands.map((b, i) => ({
-        brand: b,
-        glaze: glazes[i],
-        application: apps[i],
-        coats: coats[i]
-      })).filter((_, i) => i !== index);
-      
-      renderLayers(layers);
-    }
+                const layers = brands.map((b, i) => ({
+                    brand: b,
+                    glaze: glazes[i],
+                    application: apps[i],
+                    coats: coats[i],
+                }));
 
-    function handleImageUpload(e) {
-      const file = e.target.files[0];
-      if (!file) return;
+                layers.push({
+                    brand: "",
+                    glaze: "",
+                    application: "Dipped",
+                    coats: "",
+                });
+                renderLayers(layers);
+            };
 
-      currentImageBlob = file;
-      currentImage = URL.createObjectURL(file);
-      document.getElementById('preview').src = currentImage;
-      document.getElementById('uploadArea').classList.add('hidden');
-      document.getElementById('previewArea').classList.remove('hidden');
-    }
+            window.removeLayer = function (index) {
+                const brands = Array.from(
+                    document.querySelectorAll(".layer-brand"),
+                ).map((i) => i.value);
+                const glazes = Array.from(
+                    document.querySelectorAll(".layer-glaze"),
+                ).map((i) => i.value);
+                const coats = Array.from(
+                    document.querySelectorAll(".layer-coats"),
+                ).map((i) => i.value);
+                const apps = Array.from(
+                    document.querySelectorAll('[name^="app"]'),
+                )
+                    .filter((i) => i.checked)
+                    .map((i) => i.value);
 
-    function removeImage(e) {
-      e.stopPropagation();
-      currentImage = null;
-      currentImageBlob = null;
-      document.getElementById('imageInput').value = '';
-      document.getElementById('uploadArea').classList.remove('hidden');
-      document.getElementById('previewArea').classList.add('hidden');
-    }
+                const layers = brands
+                    .map((b, i) => ({
+                        brand: b,
+                        glaze: glazes[i],
+                        application: apps[i],
+                        coats: coats[i],
+                    }))
+                    .filter((_, i) => i !== index);
 
-    function viewFullImage() {
-      if (!currentImage) return;
-      const win = window.open();
-      win.document.write(`<img src="${currentImage}" style="max-width:100%;max-height:100vh;">`);
-    }
+                renderLayers(layers);
+            };
 
-    async function handleSave(e) {
-      e.preventDefault();
+            window.handleImageUpload = function (e) {
+                const file = e.target.files[0];
+                if (!file) return;
 
-      const brands = Array.from(document.querySelectorAll('.layer-brand')).map(i => i.value);
-      const glazes = Array.from(document.querySelectorAll('.layer-glaze')).map(i => i.value);
-      const coats = Array.from(document.querySelectorAll('.layer-coats')).map(i => i.value);
-      const apps = Array.from(document.querySelectorAll('[name^="app"]')).filter(i => i.checked).map(i => i.value);
+                currentImageBlob = file;
+                currentImage = URL.createObjectURL(file);
+                currentImageUrl = null; // Clear any existing Firebase URL
+                document.getElementById("preview").src = currentImage;
+                document.getElementById("uploadArea").classList.add("hidden");
+                document
+                    .getElementById("previewArea")
+                    .classList.remove("hidden");
+            };
 
-      const layers = brands.map((b, i) => ({
-        brand: b,
-        glaze: glazes[i],
-        application: apps[i],
-        coats: coats[i]
-      }));
+            window.removeImage = function (e) {
+                e.stopPropagation();
+                currentImage = null;
+                currentImageBlob = null;
+                currentImageUrl = null;
+                document.getElementById("imageInput").value = "";
+                document
+                    .getElementById("uploadArea")
+                    .classList.remove("hidden");
+                document.getElementById("previewArea").classList.add("hidden");
+            };
 
-      const pieceId = editingId || Date.now();
+            window.viewFullImage = function () {
+                if (!currentImage) return;
+                const win = window.open();
+                win.document.write(
+                    `<img src="${currentImage}" style="max-width:100%;max-height:100vh;">`,
+                );
+            };
 
-      const piece = {
-        id: pieceId,
-        imageId: currentImageBlob ? pieceId : (editingId ? pieces.find(p => p.id === editingId)?.imageId : null),
-        clay: document.getElementById('clay').value,
-        temperature: document.getElementById('temperature').value,
-        cone: document.getElementById('cone').value,
-        atmosphere: document.querySelector('input[name="atmosphere"]:checked').value,
-        layers: layers,
-        result: document.querySelector('input[name="result"]:checked').value,
-        notes: document.getElementById('notes').value
-      };
+            window.handleSave = async function (e) {
+                e.preventDefault();
 
-      // Save image if new
-      if (currentImageBlob) {
-        await saveImage(pieceId, currentImageBlob);
-        piece.imageId = pieceId;
-      } else if (!currentImage && editingId) {
-        // Image was removed
-        const oldPiece = pieces.find(p => p.id === editingId);
-        if (oldPiece?.imageId) {
-          await deleteImage(oldPiece.imageId);
-        }
-        piece.imageId = null;
-      }
+                const brands = Array.from(
+                    document.querySelectorAll(".layer-brand"),
+                ).map((i) => i.value);
+                const glazes = Array.from(
+                    document.querySelectorAll(".layer-glaze"),
+                ).map((i) => i.value);
+                const coats = Array.from(
+                    document.querySelectorAll(".layer-coats"),
+                ).map((i) => i.value);
+                const apps = Array.from(
+                    document.querySelectorAll('[name^="app"]'),
+                )
+                    .filter((i) => i.checked)
+                    .map((i) => i.value);
 
-      // Add to options
-      addToOptions(piece.clay, clayOptions);
-      layers.forEach(l => {
-        addToOptions(l.brand, brandOptions);
-        addToOptions(l.glaze, glazeOptions);
-      });
+                const layers = brands.map((b, i) => ({
+                    brand: b,
+                    glaze: glazes[i],
+                    application: apps[i],
+                    coats: coats[i],
+                }));
 
-      if (editingId) {
-        const index = pieces.findIndex(p => p.id === editingId);
-        pieces[index] = piece;
-      } else {
-        pieces.push(piece);
-      }
+                const pieceId = editingId || Date.now();
 
-      await savePiece(piece);
-      updateDataLists();
-      await renderGrid();
-      closeSidebar();
-    }
+                const piece = {
+                    id: pieceId,
+                    clay: document.getElementById("clay").value,
+                    temperature: document.getElementById("temperature").value,
+                    cone: document.getElementById("cone").value,
+                    atmosphere: document.querySelector(
+                        'input[name="atmosphere"]:checked',
+                    ).value,
+                    layers: layers,
+                    result: document.querySelector(
+                        'input[name="result"]:checked',
+                    ).value,
+                    notes: document.getElementById("notes").value,
+                    imageUrl: null,
+                };
 
-    async function deletePiece() {
-      if (!confirm('Are you sure you want to delete this piece?')) return;
-      await deletePieceFromDB(editingId);
-      pieces = pieces.filter(p => p.id !== editingId);
-      await renderGrid();
-      closeSidebar();
-    }
+                // Handle image
+                if (currentImageBlob) {
+                    // New image uploaded - upload to Firebase Storage
+                    piece.imageUrl = await uploadImage(
+                        pieceId,
+                        currentImageBlob,
+                    );
 
-    loadData();
-  </script>
-</body>
+                    // Delete old image if editing
+                    if (editingId) {
+                        const oldPiece = pieces.find((p) => p.id === editingId);
+                        if (
+                            oldPiece?.imageUrl &&
+                            oldPiece.imageUrl !== piece.imageUrl
+                        ) {
+                            await deleteImageFromStorage(editingId);
+                        }
+                    }
+                } else if (currentImageUrl) {
+                    // Keep existing Firebase URL
+                    piece.imageUrl = currentImageUrl;
+                } else if (editingId) {
+                    // Image was removed
+                    const oldPiece = pieces.find((p) => p.id === editingId);
+                    if (oldPiece?.imageUrl) {
+                        await deleteImageFromStorage(editingId);
+                    }
+                }
+
+                // Add to options
+                addToOptions(piece.clay, clayOptions);
+                layers.forEach((l) => {
+                    addToOptions(l.brand, brandOptions);
+                    addToOptions(l.glaze, glazeOptions);
+                });
+
+                if (editingId) {
+                    const index = pieces.findIndex((p) => p.id === editingId);
+                    pieces[index] = piece;
+                } else {
+                    pieces.push(piece);
+                }
+
+                await savePiece(piece);
+                updateDataLists();
+                renderGrid();
+                closeSidebar();
+            };
+
+            window.deletePiece = async function () {
+                if (!confirm("Are you sure you want to delete this piece?"))
+                    return;
+                await deletePieceFromDB(editingId);
+                pieces = pieces.filter((p) => p.id !== editingId);
+                renderGrid();
+                closeSidebar();
+            };
+        </script>
+    </body>
 </html>
